@@ -1,0 +1,72 @@
+body{
+    text-align: center;
+    font-family: 'Kanit';
+    background-color: #050505;
+    color:#fafafa;
+    font-size: 14px;
+    user-select: none;
+    overflow: hidden;
+    margin: auto;
+ 
+}
+
+.logodiv{
+    margin: auto;
+    width: 388px;
+    margin-top: 40px;
+
+}
+
+.logo-big{
+    line-height: 80%;
+    font-size: 92pt;
+    font-weight: 900;
+    margin: 0;
+    padding:0;
+}
+
+.logo-small{
+    text-align: left;
+    font-size: 7.2pt;
+    margin: 0;
+    padding:0;
+}
+
+.logo-sub{
+    font-size: 32pt;
+    margin: 0;
+    padding:0;
+}
+
+p{
+    padding:0;
+    margin:0;
+}
+.links{
+    margin: auto;
+    width: 400px;
+    margin-top: 25px;
+}
+
+a{
+    user-select: all;
+    font-size: 16px;
+    font-weight: 500;
+    background-color: #fafafa;;
+    text-decoration: none;
+    display: block;
+    padding: 10px;
+    margin-bottom: 8px;
+    text-align: center;
+    color: #050505;
+    border-radius: 4px;
+}
+
+a:hover{
+    background-color: #202020;
+    color: #fafafa;
+    font-weight: 500;
+    -webkit-transition: all 0.4s;
+    -moz-transition: all 0.4s;
+    transition: all 0.4s;
+  }
