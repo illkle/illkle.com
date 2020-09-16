@@ -1,72 +1,103 @@
-body{
+body {
     text-align: center;
     font-family: 'Kanit';
     background-color: #050505;
-    color:#fafafa;
+    color: #fafafa;
     font-size: 14px;
     user-select: none;
     overflow: hidden;
     margin: auto;
- 
 }
 
-.logodiv{
+.container {
+    position: absolute;
+    margin: 0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 77vw;
+}
+
+.logodiv {
     margin: auto;
-    width: 388px;
-    margin-top: 40px;
-
+    width: 100%;
 }
 
-.logo-big{
-    line-height: 80%;
-    font-size: 92pt;
+.logo-big {
+    line-height: 73%;
+    font-size: 24.5vw;
     font-weight: 900;
     margin: 0;
-    padding:0;
+    padding: 0;
 }
 
-.logo-small{
+.logo-small {
     text-align: left;
-    font-size: 7.2pt;
+    font-size: 1.62vw;
     margin: 0;
-    padding:0;
+    padding: 0;
 }
 
-.logo-sub{
-    font-size: 32pt;
+.logo-sub {
+    font-size: 9.15vw;
+    font-weight: 200;
     margin: 0;
-    padding:0;
+    padding: 0;
 }
 
-p{
-    padding:0;
-    margin:0;
+p {
+    padding: 0;
+    margin: 0;
 }
-.links{
+
+.links {
     margin: auto;
-    width: 400px;
-    margin-top: 25px;
+    width: 100%;
+    padding-top: 3vw;
 }
 
-a{
-    user-select: all;
-    font-size: 16px;
+a {
+    font-size: 5vw;
     font-weight: 500;
-    background-color: #fafafa;;
+    background-color: #fafafa;
     text-decoration: none;
     display: block;
-    padding: 10px;
-    margin-bottom: 8px;
+    padding: 20px;
+    margin-bottom: 2vw;
     text-align: center;
     color: #050505;
     border-radius: 4px;
 }
 
-a:hover{
+a:hover {
     background-color: #202020;
     color: #fafafa;
     font-weight: 500;
     -webkit-transition: all 0.4s;
     -moz-transition: all 0.4s;
     transition: all 0.4s;
-  }
+}
+
+@media only screen and (min-width: 1200px) {
+    .logodiv {
+        width: 26vw;
+    }
+    .logo-big {
+        font-size: 8.27vw;
+    }
+    .logo-small {
+        font-size: .54vw;
+    }
+    .logo-sub {
+        font-size: 3.09vw;
+    }
+    .links {
+        width: 26vw;
+        padding-top: 1vw;
+    }
+    a {
+        font-size: 1.5vw;
+        margin-bottom: .6vw;
+    }
+}
