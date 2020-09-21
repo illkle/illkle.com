@@ -1,8 +1,14 @@
+:root {
+    --BACK: #050505;
+    --PRIMARY: #fafafa;
+    --BACK80: #202020
+  }
+
 body {
     text-align: center;
     font-family: 'Kanit';
-    background-color: #050505;
-    color: #fafafa;
+    background-color: var(--BACK);
+    color: var(--PRIMARY);
     font-size: 14px;
     user-select: none;
     overflow: hidden;
@@ -30,6 +36,10 @@ body {
     font-weight: 900;
     margin: 0;
     padding: 0;
+}
+
+.logo-big:hover {
+    
 }
 
 .logo-small {
@@ -60,26 +70,26 @@ p {
 a {
     font-size: 5vw;
     font-weight: 500;
-    background-color: #fafafa;
+    background-color: var(--PRIMARY);
     text-decoration: none;
     display: block;
     padding: 20px;
     margin-bottom: 2vw;
     text-align: center;
-    color: #050505;
+    color: var(--BACK);
     border-radius: 4px;
 }
 
 a:hover {
-    background-color: #202020;
-    color: #fafafa;
+    background-color: var(--BACK80);
+    color: var(--PRIMARY);
     font-weight: 500;
     -webkit-transition: all 0.4s;
     -moz-transition: all 0.4s;
     transition: all 0.4s;
 }
 
-@media only screen and (min-width: 1200px) {
+@media (orientation:landscape) {
     .logodiv {
         width: 26vw;
     }
