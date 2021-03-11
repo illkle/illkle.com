@@ -1,95 +1,84 @@
 :root {
-    --BACK: #050505;
-    --PRIMARY: #fafafa;
+    --BACK: #f3f3f3;
+    --PRIMARY: #070707;
     --BACK80: #202020
   }
+
+*{
+    margin: 0;
+    padding:0;
+    box-sizing: border-box;
+}
 
 body {
     text-align: center;
     font-family: 'Kanit';
     background-color: var(--BACK);
-    color: var(--PRIMARY);
     font-size: 14px;
     user-select: none;
-    overflow: hidden;
-    margin: auto;
 }
 
 .container {
     position: absolute;
-    margin: 0;
-    position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 77vw;
+    max-width: 90vw;
 }
 
 .logodiv {
-    margin: auto;
-    width: 100%;
+    color: var(--PRIMARY);
+    /*margin: auto;*/
 }
 
 .logo-big {
+    font-size: 10vw;
     line-height: 73%;
-    font-size: 24.5vw;
     font-weight: 900;
-    margin: 0;
-    padding: 0;
-}
-
-.logo-big:hover {
-    
 }
 
 .logo-small {
     text-align: left;
-    font-size: 1.60vw;
-    margin: 0;
-    padding: 0;
 }
 
 .logo-sub {
-    font-size: 9.13vw;
     font-weight: 200;
-    margin: 0;
-    padding: 0;
-}
-
-p {
-    padding: 0;
-    margin: 0;
 }
 
 .links {
-    margin: auto;
-    width: 100%;
-    padding-top: 3vw;
+    padding-top: 2vh;
 }
 
+
+
 a {
-    font-size: 5vw;
     font-weight: 500;
-    background-color: var(--PRIMARY);
     text-decoration: none;
-    display: block;
-    padding: 20px;
-    margin-bottom: 2vw;
     text-align: center;
-    color: var(--BACK);
-    border-radius: 4px;
+    border: 1px solid var(--PRIMARY);
+    color: var(--PRIMARY);
+    margin-bottom: 3%;
+    padding: 2vw;
+    padding-top: 2vh;
+    padding-bottom: 2vh;
+    display: block;
+
+    font-size: 3vh;
+
+    box-shadow: 3px 3px 0 var(--PRIMARY)
 }
 
 a:hover {
     background-color: var(--BACK80);
-    color: var(--PRIMARY);
-    font-weight: 500;
-    -webkit-transition: all 0.4s;
-    -moz-transition: all 0.4s;
-    transition: all 0.4s;
+    color: var(--BACK);
+    transition: all 0.2s;
 }
 
-@media (orientation:landscape) {
+.email{
+    user-select: all
+}
+
+/*@media (orientation:landscape) {
     .logodiv {
         width: 26vw;
     }
@@ -110,4 +99,4 @@ a:hover {
         font-size: 1.5vw;
         margin-bottom: .6vw;
     }
-}
+}*/
