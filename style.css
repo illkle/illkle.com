@@ -10,9 +10,19 @@
     box-sizing: border-box;
 }
 
+@font-face {
+    font-family: 'Monument Extended Black';
+    src: url('./fonts/MonumentExtended-Black.ttf');
+}
+@font-face {
+    font-family: 'Monument Extended Light';
+    src: url('./fonts/MonumentExtended-Light.ttf');
+}
+
+
 body {
     text-align: center;
-    font-family: 'Kanit';
+    font-family: 'Monument Extended Black';
     background-color: var(--BACK);
     font-size: 14px;
     user-select: none;
@@ -23,26 +33,23 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    max-width: 90vw;
 }
 
 .logodiv {
     color: var(--PRIMARY);
-    /*margin: auto;*/
 }
 
 .logo-big {
-    font-size: 10vw;
-    line-height: 73%;
+    font-size: 90px;
+    font-size: calc(90px + 1.5vh);;
     font-weight: 900;
+    white-space: nowrap
 }
 
 .logo-small {
+    font-family: 'Monument Extended Light';
+    font-size: 75%;
     text-align: left;
-}
-
-.logo-sub {
-    font-weight: 200;
 }
 
 .links {
@@ -57,13 +64,15 @@ a {
     text-align: center;
     border: 1px solid var(--PRIMARY);
     color: var(--PRIMARY);
-    margin-bottom: 3%;
-    padding: 2vw;
-    padding-top: 2vh;
-    padding-bottom: 2vh;
+    margin-bottom: 10px;
+    
+    font-size: calc(14px + .4vmin);
+
+    padding-top: 30px;
+    padding-bottom: 30px;
     display: block;
 
-    font-size: 3vh;
+    overflow: hidden;
 
     box-shadow: 3px 3px 0 var(--PRIMARY)
 }
@@ -73,30 +82,6 @@ a:hover {
     color: var(--BACK);
     transition: all 0.2s;
 }
-
 .email{
     user-select: all
 }
-
-/*@media (orientation:landscape) {
-    .logodiv {
-        width: 26vw;
-    }
-    .logo-big {
-        font-size: 8.27vw;
-    }
-    .logo-small {
-        font-size: .54vw;
-    }
-    .logo-sub {
-        font-size: 3.09vw;
-    }
-    .links {
-        width: 26vw;
-        padding-top: 1vw;
-    }
-    a {
-        font-size: 1.5vw;
-        margin-bottom: .6vw;
-    }
-}*/
