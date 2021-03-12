@@ -1,7 +1,7 @@
 :root {
     --BACK: #f3f3f3;
     --PRIMARY: #070707;
-    --BACK80: #202020
+    --PRIMARY80: #202020;
   }
 
 *{
@@ -36,14 +36,14 @@ body {
 }
 
 .logodiv {
-    color: var(--PRIMARY);
+    color: var(--PRIMARY80);
 }
 
 .logo-big {
     font-size: 90px;
-    font-size: calc(90px + 1.5vh);;
-    font-weight: 900;
-    white-space: nowrap
+    font-size: calc(90px + 1.5vh);
+    white-space: nowrap;
+    line-height: 80%;
 }
 
 .logo-small {
@@ -58,13 +58,12 @@ body {
 
 
 
-a {
-    font-weight: 500;
+.links a, .links p {
     text-decoration: none;
     text-align: center;
     border: 1px solid var(--PRIMARY);
     color: var(--PRIMARY);
-    margin-bottom: 10px;
+    margin-bottom: 15px;
     
     font-size: calc(14px + .4vmin);
 
@@ -78,9 +77,11 @@ a {
 }
 
 a:hover {
-    background-color: var(--BACK80);
+    background-color: var(--PRIMARY80);
     color: var(--BACK);
-    transition: all 0.2s;
+    transform: scale(1.02) translateY(-5px);
+    transition: all 0.3s;
+    box-shadow: 6px 8px 0 var(--PRIMARY)
 }
 .email{
     user-select: all
