@@ -31,6 +31,7 @@ body {
     font-size: 1.4rem;
     user-select: none;
     box-sizing: border-box;
+
 }
 
 .container {
@@ -38,7 +39,9 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
+    max-height: 100%;
 }
+
 
 .logodiv {
     color: var(--PRIMARY80);
@@ -48,6 +51,7 @@ body {
     font-size: 10rem;
     white-space: nowrap;
     line-height: 80%;
+    margin-top: 3rem;
 }
 
 .logo-small {
@@ -57,42 +61,46 @@ body {
 }
 
 .links {
-    padding-top: 2vh;
+    padding-top: 2rem;
+    padding-bottom: 3rem;
 }
 
-
-
-.links a {
-    text-decoration: none;
-    text-align: center;
+.links-block {
     border: 1px solid var(--PRIMARY);
-    color: var(--PRIMARY);
     margin-bottom: 1.5rem;
-
-    font-size: 1.5rem;
-
-    padding-top: 3rem;
-    padding-bottom: 3rem;
-    display: block;
-
+    font-size: 1.7rem;
+    height:8rem;
     overflow: hidden;
-
+    display: flex;
+    justify-content: center;
+    align-items: center;
     box-shadow: 3px 3px 0 var(--PRIMARY)
 }
 
-a:hover {
+.links-block:hover {
     background-color: var(--PRIMARY80);
-    color: var(--BACK);
     transform: scale(1.02) translateY(-5px);
     transition: all 0.3s;
     box-shadow: 6px 8px 0 var(--PRIMARY)
 }
+
+.links-block a{
+    text-decoration: none;
+    text-align: center;
+    color: var(--PRIMARY);
+
+}
+.links-block:hover a{
+    color: var(--BACK)
+}
+
+
 .email{
     user-select: all
 }
 
 
-@media (min-width: 600px) and (orientation:portrait){
+@media (min-width: 800px) and (orientation:portrait){
     html{
         font-size: 100%;
     }
