@@ -7,7 +7,11 @@
 *{
     margin: 0;
     padding:0;
-    box-sizing: border-box;
+    box-sizing: inherit;
+}
+
+html{
+    font-size: 62.5%;
 }
 
 @font-face {
@@ -24,8 +28,9 @@ body {
     text-align: center;
     font-family: 'Monument Extended Black';
     background-color: var(--BACK);
-    font-size: 14px;
+    font-size: 1.4rem;
     user-select: none;
+    box-sizing: border-box;
 }
 
 .container {
@@ -40,15 +45,14 @@ body {
 }
 
 .logo-big {
-    font-size: 90px;
-    font-size: calc(90px + 1.5vh);
+    font-size: 10rem;
     white-space: nowrap;
     line-height: 80%;
 }
 
 .logo-small {
     font-family: 'Monument Extended Light';
-    font-size: 75%;
+    font-size: 1rem;
     text-align: left;
 }
 
@@ -63,12 +67,12 @@ body {
     text-align: center;
     border: 1px solid var(--PRIMARY);
     color: var(--PRIMARY);
-    margin-bottom: 15px;
-    
-    font-size: calc(14px + .4vmin);
+    margin-bottom: 1.5rem;
 
-    padding-top: 30px;
-    padding-bottom: 30px;
+    font-size: 1.5rem;
+
+    padding-top: 3rem;
+    padding-bottom: 3rem;
     display: block;
 
     overflow: hidden;
@@ -87,13 +91,9 @@ a:hover {
     user-select: all
 }
 
+
 @media (min-width: 600px) and (orientation:portrait){
-    .logo-big{
-        font-size: calc(90px + 8vw);
-    }
-    .links a{
-        font-size: calc(14px + 1.5vmin);
-        padding-top: 50px;
-        padding-bottom: 50px;
+    html{
+        font-size: 100%;
     }
 }
