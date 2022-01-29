@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+	font-family: 'OpenSans';
+	src: url('./fonts/OpenSans-Variable.ttf'); /* IE9 Compat Modes */
+	font-weight: 300 800;
+}
+
+html {
+	font-family: 'OpenSans';
+}
+
+h1 {
+	@apply text-8xl font-extrabold mb-8;
+}
