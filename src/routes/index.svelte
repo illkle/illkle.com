@@ -12,8 +12,6 @@
 
 	let divFor3d: HTMLElement;
 
-	console.log('0');
-
 	const scene = new THREE.Scene();
 
 	const mainMaterial = new THREE.MeshStandardMaterial({ color: 'rgb(200,200,200)' });
@@ -54,14 +52,14 @@
 		const controls = new OrbitControls(camera, renderer.domElement);
 		controls.update();
 
-		loader.load('src/assets/ze_kel	.glb', function onload(file) {
+		loader.load('src/assets/ze_kel.glb', function onload(file) {
 			const sign = file.scene.children[0];
 
 			sign.scale.set(8, 8, 8);
 			sign.position.set(0, 0, 1.2);
 
 			//@ts-expect-error
-			sign.material = material;
+			sign.material = mainMaterial;
 
 			scene.add(sign);
 		});
@@ -75,7 +73,7 @@
 </script>
 
 <svelte:head>
-	<title>ZE KEL | Home</title>
+	<title>ze kel | home</title>
 </svelte:head>
 
 <section class="h-full flex flex-col">
