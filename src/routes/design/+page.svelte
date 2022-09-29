@@ -2,8 +2,8 @@
 	import { stringify } from 'postcss';
 	import { marked } from 'marked';
 
-	import index from '../data/design';
-	import rawMarkdown from '../data/design/design.md?raw';
+	import index from '../../data/design';
+	import rawMarkdown from '../../data/design/design.md?raw';
 
 	const parsedText = marked.parse(rawMarkdown, { breaks: true });
 

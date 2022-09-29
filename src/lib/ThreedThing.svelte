@@ -1,7 +1,3 @@
-<script context="module" lang="ts">
-	export const prerender = true;
-</script>
-
 <script lang="ts">
 	import * as THREE from 'three';
 
@@ -9,43 +5,52 @@
 	import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 	import { RectAreaLightHelper } from 'three/examples/jsm/helpers/RectAreaLightHelper';
 	import { onMount } from 'svelte';
+	import { Layers } from 'three';
 
 	let divFor3d: HTMLElement;
 
 	const scene = new THREE.Scene();
 
-	const mainMaterial = new THREE.MeshStandardMaterial({ color: 'rgb(200,200,200)' });
+	const mainMaterial = new THREE.MeshStandardMaterial({ color: 'rgb(240,240,240)' });
 
 	const loader = new GLTFLoader();
 
-	const material = new THREE.MeshPhysicalMaterial({ color: 'rgb(150,255,50)' });
+	let light1 = new THREE.RectAreaLight('white', 4, 10, 10);
+	light1.position.set(10, 10, -4);
+	light1.lookAt(0, 0, 0);
+	light1.castShadow = true;
+	const helper1 = new RectAreaLightHelper(light1);
+	scene.add(light1);
+	//scene.add(helper1);
 
-	let light3 = new THREE.RectAreaLight('white', 20, 5, 5);
-	light3.position.set(-15, 7, 8);
+	let light2 = new THREE.AmbientLight('white', 0.5);
+	scene.add(light2);
+
+	let light3 = new THREE.RectAreaLight('white', 10, 20, 20);
+	light3.position.set(-25, 7, 8);
 	light3.lookAt(0, 0, 0);
-
-	const helper = new RectAreaLightHelper(light3);
-
+	light3.castShadow = true;
+	const helper3 = new RectAreaLightHelper(light3);
 	scene.add(light3);
-
-	scene.add(helper);
+	//scene.add(helper3);
 
 	const ambitent = new THREE.AmbientLight('white', 0.1);
 	scene.add(ambitent);
 
 	onMount(() => {
 		const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+		renderer.toneMapping = THREE.ACESFilmicToneMapping;
+		renderer.physicallyCorrectLights = true;
 
-		const camera = new THREE.PerspectiveCamera(
-			60,
-			window.innerWidth / window.innerHeight,
-			0.1,
-			1000
-		);
+		const rect = divFor3d.getBoundingClientRect();
+
+		console.log('rectw', rect.height);
+
+		const camera = new THREE.PerspectiveCamera(60, rect.width / rect.height, 0.1, 1000);
 
 		camera.position.y = 25;
 
-		renderer.setSize(window.innerWidth, window.innerHeight);
+		renderer.setSize(rect.width, rect.height);
 
 		divFor3d.appendChild(renderer.domElement);
 
@@ -72,13 +77,4 @@
 	});
 </script>
 
-<svelte:head>
-	<title>ze kel | home</title>
-</svelte:head>
-
-<section class="h-full flex flex-col">
-	<div class="absolute left-0 top-0 z-0" bind:this={divFor3d} />
-</section>
-
-<style>
-</style>
+<div bind:this={divFor3d} class=" h-full" />
