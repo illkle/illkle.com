@@ -1,22 +1,53 @@
 <template>
-  <div class="flex h-screen w-full items-center justify-center" :style="{}">
+  <div
+    class="flex h-screen w-screen overflow-hidden items-center justify-center"
+    :style="{}"
+  >
     <div
       ref="cardRef"
       class="flex z-10"
       :style="{
-        perspective: '300px',
+        perspective: '500px',
       }"
     >
       <div
         :style="{
           transform: rotationStyle,
         }"
-        class="bg-gradient-to-br from-neutral-50 to-neutral-500 w-64 h-[400px] rounded-[16px] z-10 p-0.5"
+        class="w-[600px] h-[400px] rounded-[16px] p-0.5 overflow-hidden relative"
       >
         <div
-          class="w-full h-full rounded-[14px] flex flex-col bg-neutral-950 p-4"
+          class="w-full h-full rounded-[14px] flex flex-col p-4 relative backdrop-blur-lg border-2 bg-neutral-950 bg-opacity-50"
         >
-          <h2 class="text-4xl font-bold">SOME THING</h2>
+          <img
+            src="/public/over1.jpg"
+            class="absolute left-1/2 top-1/2 w-[1500px] h-[1500px] z-20 max-w-[unset] opacity-50 pointer-events-none"
+            :style="{
+              transform: `translateX(calc(-50% + ${overlay1X}%)) translateY(calc(-50% + ${overlay1Y}%))`,
+            }"
+          />
+          <div ref="cardTL" class="absolute top-1 left-1"></div>
+          <div ref="cardTR" class="absolute top-1 right-1"></div>
+          <div ref="cardBR" class="absolute bottom-1 right-1"></div>
+          <div ref="cardBL" class="absolute bottom-1 left-1"></div>
+
+          <div class="relative z-50">
+            <h2 class="text-4xl font-bold">SOME THING</h2>
+
+            <div>Frametime: {{ frameTime.toFixed(6) }}</div>
+
+            <div>Time budget: {{ (1000 / fps).toFixed(4) }}</div>
+            <div>FPS {{ fps.toFixed(0) }} (approx)</div>
+
+            <input v-model="PPS" class="bg-neutral-950" type="number" />
+
+            <button
+              class="bg-neutral-50"
+              @click="() => (isGeneratingParticles = !isGeneratingParticles)"
+            >
+              PLAY PAUSE
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -32,31 +63,6 @@ const context = ref<CanvasRenderingContext2D>();
 
 const cardRef = ref<HTMLElement>();
 
-const cardDimensions = ref({
-  width: 0,
-  height: 0,
-  real: false,
-});
-
-const updateCardDimensions = () => {
-  if (!cardRef.value) return;
-
-  const bcr = cardRef.value.getBoundingClientRect();
-
-  cardDimensions.value = { width: bcr.width, height: bcr.height, real: true };
-};
-
-onMounted(() => {
-  addEventListener('resize', updateCardDimensions);
-  addEventListener('scroll', updateCardDimensions);
-  updateCardDimensions();
-});
-
-onUnmounted(() => {
-  removeEventListener('resize', updateCardDimensions);
-  removeEventListener('scroll', updateCardDimensions);
-});
-
 const { screenWidth, screenHeight } = useScreenSize();
 
 watch([screenWidth, screenHeight], () => {
@@ -69,57 +75,104 @@ watchEffect(() => {
   context.value = canvas.value?.getContext('2d') as CanvasRenderingContext2D;
 });
 
-const drawRect = (
-  ctx: CanvasRenderingContext2D,
-  w: number,
-  h: number,
-  x: number,
-  y: number
-) => {
-  ctx.beginPath();
-  ctx.strokeStyle = 'red';
-  ctx.strokeRect(x + w / 2, y + h / 2, w, h);
-  ctx.restore();
-};
+watch([context, screenWidth, screenHeight], (upd) => {
+  if (!upd[0] || !canvas.value) return;
 
-watch(context, (ctx) => {
-  if (!ctx || !canvas.value) return;
-
-  canvas.value.width = screenWidth.value * devicePixelRatio;
-  canvas.value.height = screenHeight.value * devicePixelRatio;
+  canvas.value.width = upd[1] * devicePixelRatio;
+  canvas.value.height = upd[2] * devicePixelRatio;
   canvas.value.style.transform = `scale(${1 / devicePixelRatio})`;
   canvas.value.style.transformOrigin = 'top left';
-  ctx.scale(devicePixelRatio, devicePixelRatio);
+  upd[0].scale(devicePixelRatio, devicePixelRatio);
 });
 
 // Card transform
 const { mouseX, mouseY } = useMousePos();
 
+const mousePercentX = computed(() =>
+  range(0, screenWidth.value, 0, 100, mouseX.value)
+);
+const mousePercentY = computed(() =>
+  range(0, screenHeight.value, 0, 100, mouseY.value)
+);
+
 const rotationX = computed(() => {
-  return range(0, screenWidth.value, -30, 30, mouseX.value);
+  return range(0, 100, -30, 30, mousePercentX.value);
+});
+const rotationY = computed(() => {
+  return range(0, 100, 30, -30, mousePercentY.value);
 });
 
-const rotationY = computed(() => {
-  return range(0, screenHeight.value, 30, -30, mouseY.value);
+const overlay1X = computed(() => {
+  return range(0, 100, -30, 30, mousePercentX.value);
+});
+const overlay1Y = computed(() => {
+  return range(0, 100, 30, -30, mousePercentY.value);
 });
 
 const rotationStyle = computed(() => {
   return `rotateY(${rotationX.value}deg) rotateX(${rotationY.value}deg  )`;
 });
 
+const cardTR = ref<HTMLElement>();
+const cardTL = ref<HTMLElement>();
+const cardBL = ref<HTMLElement>();
+const cardBR = ref<HTMLElement>();
+
+type Point = { x: number; y: number };
+const cardPoints = ref({
+  tl: { x: 0, y: 0 },
+  bl: { x: 0, y: 0 },
+  tr: { x: 0, y: 0 },
+  br: { x: 0, y: 0 },
+});
+
+const updateCardPoint = () => {
+  if (!cardTL.value || !cardBL.value || !cardTR.value || !cardBR.value) return;
+  cardPoints.value.tl = cardTL.value.getBoundingClientRect();
+  cardPoints.value.bl = cardBL.value.getBoundingClientRect();
+  cardPoints.value.tr = cardTR.value.getBoundingClientRect();
+  cardPoints.value.br = cardBR.value.getBoundingClientRect();
+};
+
+onMounted(() => {
+  addEventListener('resize', updateCardPoint);
+  addEventListener('mousemove', updateCardPoint);
+  addEventListener('scroll', updateCardPoint);
+});
+
 // Main loop
 const isGeneratingParticles = ref(true);
 
-const playing = ref(false);
+const playing = ref(true);
 
 let lastFrameAt: number | null = null;
 
+const frameTime = ref(0);
+const fps = ref(0);
+let framenum = 1;
+
 const renderLoop: FrameRequestCallback = (timestamp) => {
   if (!playing.value) return;
+
+  if (framenum === 60) {
+    performance.mark('frameStart');
+    framenum = 0;
+  } else {
+    framenum++;
+  }
+
   const secFromLast =
     timestamp && lastFrameAt ? (timestamp - lastFrameAt) / 1000 : 0;
   lastFrameAt = timestamp;
   frameUpdate(secFromLast);
+
+  if (framenum == 0) {
+    performance.mark('frameEnd');
+    const p = performance.measure('frame', 'frameStart', 'frameEnd');
+
+    fps.value = 1 / secFromLast;
+    frameTime.value = p.duration;
+  }
   requestAnimationFrame(renderLoop);
 };
 
@@ -153,23 +206,33 @@ type Particle = {
   size: number;
 };
 
-const drawParticle = (ctx: CanvasRenderingContext2D, p: Particle) => {
-  ctx.beginPath();
-  ctx.arc(p.x, p.y, p.size, 0, 2 * Math.PI);
-  ctx.globalAlpha = p.ttl < 5 ? p.ttl / 5 : 1;
-  ctx.fillStyle = 'rgb(255, 255, 255)';
-  ctx.fill();
-  ctx.restore();
-};
-
 const drawParticles = (ctx: CanvasRenderingContext2D) => {
-  particles.forEach((p) => drawParticle(ctx, p));
+  ctx.fillStyle = 'rgb(255, 255, 255)';
+  ctx.beginPath();
+  particles.forEach((p) => {
+    ctx.moveTo(p.x, p.y);
+    ctx.arc(p.x, p.y, p.size, 0, 2 * Math.PI);
+  });
+  ctx.fill();
 };
 
 const drawInfo = (ctx: CanvasRenderingContext2D) => {
   ctx.fillStyle = '#FFF';
   ctx.font = '12px';
   ctx.fillText(`Particles: ${particles.length}`, 10, 10);
+
+  Object.values(cardPoints.value).forEach((p) => {
+    ctx.fillStyle = 'red';
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y);
+    ctx.arc(p.x, p.y, 1, 0, 2 * Math.PI);
+    ctx.fill();
+  });
+};
+
+const drawCardBorder = (ctx: CanvasRenderingContext2D) => {
+  const centerX = screenWidth.value / 2;
+  const centerY = screenHeight.value / 2;
 };
 
 const frameUpdate = (secFromLast: number) => {
@@ -181,16 +244,59 @@ const frameUpdate = (secFromLast: number) => {
   clearScreen(context.value);
   drawParticles(context.value);
   drawInfo(context.value);
+  drawCardBorder(context.value);
 };
 
 const clearScreen = (ctx: CanvasRenderingContext2D) => {
   ctx.clearRect(0, 0, screenWidth.value, screenHeight.value);
 };
 
-const PPS = ref(30);
+const PPS = ref(100);
 
 const P_SPREAD = 20;
 const P_MULT = 15;
+
+function getRandomPointOnQuadrilateral(
+  p1: Point,
+  p2: Point,
+  p3: Point,
+  p4: Point
+): Point {
+  const lines = [
+    [p1, p2],
+    [p2, p3],
+    [p3, p4],
+    [p4, p1],
+  ];
+
+  const linesLen = lines.map((v) =>
+    Math.sqrt(Math.pow(v[0].x - v[1].x, 2) + Math.pow(v[0].y - v[1].y, 2))
+  );
+
+  const randomRes = getRandomNumber(
+    0,
+    linesLen.reduce((a, b) => a + b)
+  );
+
+  let lenStart = 0;
+  for (let li = 0; li < lines.length; li++) {
+    const end = lenStart + linesLen[li];
+    if (end < randomRes) {
+      lenStart += linesLen[li];
+      continue;
+    }
+    const progress = range(lenStart, end, 0, 1, randomRes);
+
+    const line = lines[li];
+
+    const x = (line[0].x - line[1].x) * progress + line[1].x;
+    const y = (line[0].y - line[1].y) * progress + line[1].y;
+
+    return { x, y };
+  }
+
+  return { x: screenWidth.value / 2, y: screenHeight.value / 2 };
+}
 
 const generateParticles = (secFromLast: number) => {
   const rawCount = secFromLast * PPS.value;
@@ -201,19 +307,16 @@ const generateParticles = (secFromLast: number) => {
   const bXv = -rotationX.value;
   const bYv = rotationY.value;
 
-  const bX = screenWidth.value / 2;
-  const bY = screenHeight.value / 2;
-
   for (let i = 0; i < count; i++) {
+    const { x, y } = getRandomPointOnQuadrilateral(
+      cardPoints.value.tl,
+      cardPoints.value.tr,
+      cardPoints.value.br,
+      cardPoints.value.bl
+    );
     particles.push({
-      x: getRandomNumber(
-        bX - cardDimensions.value.width / 3,
-        bX + cardDimensions.value.width / 3
-      ),
-      y: getRandomNumber(
-        bY - cardDimensions.value.height / 3,
-        bY + cardDimensions.value.height / 3
-      ),
+      x,
+      y,
       velX: getRandomNumber(bXv - P_SPREAD, bXv + P_SPREAD) * P_MULT,
       velY: getRandomNumber(bYv - P_SPREAD, bYv + P_SPREAD) * P_MULT,
       ttl: getRandomNumber(3, 14),
