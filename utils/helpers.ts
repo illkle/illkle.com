@@ -55,3 +55,12 @@ export const range = (
   y2: number,
   a: number
 ) => lerp(x2, y2, invlerp(x1, y1, a));
+
+export type Point = { x: number; y: number };
+
+export const interpolatePoints = (a: Point, b: Point, progress: number): Point => {
+  const x = (a.x - b.x) * progress + b.x;
+  const y = (a.y - b.y) * progress + b.y;
+
+  return { x, y };
+};

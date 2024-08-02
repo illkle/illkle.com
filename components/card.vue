@@ -10,11 +10,12 @@
         perspective: '500px',
       }"
     >
+      <div></div>
       <div
         :style="{
           transform: rotationStyle,
         }"
-        class="w-[600px] h-[400px] rounded-[16px] p-0.5 overflow-hidden relative"
+        class="w-[600px] h-[400px] rounded-[16px] p-0.5 relative overflow-hidden"
       >
         <div
           class="w-full h-full rounded-[14px] flex flex-col p-4 relative backdrop-blur-lg border-2 bg-neutral-950 bg-opacity-50"
@@ -65,13 +66,8 @@ const cardRef = ref<HTMLElement>();
 
 const { screenWidth, screenHeight } = useScreenSize();
 
-watch([screenWidth, screenHeight], () => {
-  if (!canvas.value || !context.value) return;
-});
-
 watchEffect(() => {
   if (!canvas.value) return;
-
   context.value = canvas.value?.getContext('2d') as CanvasRenderingContext2D;
 });
 
@@ -118,7 +114,6 @@ const cardTL = ref<HTMLElement>();
 const cardBL = ref<HTMLElement>();
 const cardBR = ref<HTMLElement>();
 
-type Point = { x: number; y: number };
 const cardPoints = ref({
   tl: { x: 0, y: 0 },
   bl: { x: 0, y: 0 },
@@ -141,7 +136,7 @@ onMounted(() => {
 });
 
 // Main loop
-const isGeneratingParticles = ref(true);
+const isGeneratingParticles = ref(false);
 
 const playing = ref(true);
 
@@ -225,14 +220,46 @@ const drawInfo = (ctx: CanvasRenderingContext2D) => {
     ctx.fillStyle = 'red';
     ctx.beginPath();
     ctx.moveTo(p.x, p.y);
-    ctx.arc(p.x, p.y, 1, 0, 2 * Math.PI);
+    ctx.arc(p.x, p.y, 10, 0, 2 * Math.PI);
     ctx.fill();
   });
 };
 
-const drawCardBorder = (ctx: CanvasRenderingContext2D) => {
-  const centerX = screenWidth.value / 2;
-  const centerY = screenHeight.value / 2;
+const drawLines = (ctx: CanvasRenderingContext2D) => {
+  const fromMouseToCard = [
+    cardPoints.value.tl,
+    cardPoints.value.tr,
+    cardPoints.value.br,
+    cardPoints.value.bl,
+  ].map((v) => {
+    return { from: { x: mouseX.value, y: mouseY.value }, to: v };
+  });
+
+  const lFactor = 2;
+  const toDraw = fromMouseToCard.map((a) => {
+    const mX = a.to.x - a.from.x;
+    const mY = a.to.y - a.from.y;
+
+    return {
+      from: a.to,
+      to: { x: a.to.x + mX * lFactor, y: a.to.y + mY * lFactor },
+    };
+  });
+
+  for (let i = 0; i < toDraw.length; i++) {
+    const a = toDraw[i === 0 ? toDraw.length - 1 : i - 1];
+    const b = toDraw[i];
+    ctx.beginPath();
+    ctx.moveTo(a.from.x, a.from.y);
+
+    ctx.lineTo(a.to.x, a.to.y);
+    ctx.lineTo(b.to.x, b.to.y);
+    ctx.lineTo(b.from.x, b.from.y);
+    ctx.lineWidth = 15;
+
+    ctx.strokeStyle = '';
+    ctx.fill();
+  }
 };
 
 const frameUpdate = (secFromLast: number) => {
@@ -244,7 +271,7 @@ const frameUpdate = (secFromLast: number) => {
   clearScreen(context.value);
   drawParticles(context.value);
   drawInfo(context.value);
-  drawCardBorder(context.value);
+  drawLines(context.value);
 };
 
 const clearScreen = (ctx: CanvasRenderingContext2D) => {
@@ -256,22 +283,24 @@ const PPS = ref(100);
 const P_SPREAD = 20;
 const P_MULT = 15;
 
-function getRandomPointOnQuadrilateral(
+const getDistanceBetweenPoints = (a: Point, b: Point) => {
+  return Math.abs(Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2)));
+};
+
+const getRandomPointOnQuadrilateral = (
   p1: Point,
   p2: Point,
   p3: Point,
   p4: Point
-): Point {
-  const lines = [
+): Point => {
+  const lines: [Point, Point][] = [
     [p1, p2],
     [p2, p3],
     [p3, p4],
     [p4, p1],
   ];
 
-  const linesLen = lines.map((v) =>
-    Math.sqrt(Math.pow(v[0].x - v[1].x, 2) + Math.pow(v[0].y - v[1].y, 2))
-  );
+  const linesLen = lines.map((v) => getDistanceBetweenPoints(v[0], v[1]));
 
   const randomRes = getRandomNumber(
     0,
@@ -289,6 +318,8 @@ function getRandomPointOnQuadrilateral(
 
     const line = lines[li];
 
+    return interpolatePoints(...lines[li], progress);
+
     const x = (line[0].x - line[1].x) * progress + line[1].x;
     const y = (line[0].y - line[1].y) * progress + line[1].y;
 
@@ -296,7 +327,7 @@ function getRandomPointOnQuadrilateral(
   }
 
   return { x: screenWidth.value / 2, y: screenHeight.value / 2 };
-}
+};
 
 const generateParticles = (secFromLast: number) => {
   const rawCount = secFromLast * PPS.value;
