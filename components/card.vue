@@ -7,10 +7,9 @@
       ref="cardRef"
       class="flex z-10"
       :style="{
-        perspective: '500px',
+        perspective: '400px',
       }"
     >
-      <div></div>
       <div
         :style="{
           transform: rotationStyle,
@@ -18,11 +17,11 @@
         class="w-[600px] h-[400px] rounded-[16px] p-0.5 relative overflow-hidden"
       >
         <div
-          class="w-full h-full rounded-[14px] flex flex-col p-4 relative backdrop-blur-lg border-2 bg-neutral-950 bg-opacity-50"
+          class="w-full h-full rounded-[14px] flex flex-col p-4 relative backdrop-blur-sm border-2 bg-black bg-opacity-95"
         >
           <img
             src="/public/over1.jpg"
-            class="absolute left-1/2 top-1/2 w-[1500px] h-[1500px] z-20 max-w-[unset] opacity-50 pointer-events-none"
+            class="absolute left-1/2 top-1/2 w-[1500px] h-[1500px] z-20 max-w-[unset] opacity-10 pointer-events-none"
             :style="{
               transform: `translateX(calc(-50% + ${overlay1X}%)) translateY(calc(-50% + ${overlay1Y}%))`,
             }"
@@ -33,55 +32,55 @@
           <div ref="cardBL" class="absolute bottom-1 left-1"></div>
 
           <div class="relative z-50">
-            <h2 class="text-4xl font-bold">SOME THING</h2>
-
-            <div>Frametime: {{ frameTime.toFixed(6) }}</div>
-
-            <div>Time budget: {{ (1000 / fps).toFixed(4) }}</div>
-            <div>FPS {{ fps.toFixed(0) }} (approx)</div>
-
-            <input v-model="PPS" class="bg-neutral-950" type="number" />
-
-            <button
-              class="bg-neutral-50"
-              @click="() => (isGeneratingParticles = !isGeneratingParticles)"
-            >
-              PLAY PAUSE
-            </button>
+            <h1 class="text-2xl font-bold">KIRILL KLEYMENOV</h1>
+            <br />
+            <h2 class="text-xl">
+              Frontend focused fullstack developer.
+              <br />Ex motion designer
+            </h2>
           </div>
         </div>
       </div>
     </div>
+
+    <div v-if="false">
+      <div>Frametime: {{ frameTime.toFixed(6) }}</div>
+
+      <div>Time budget: {{ (1000 / fps).toFixed(4) }}</div>
+      <div>FPS {{ fps.toFixed(0) }} (approx)</div>
+
+      <input v-model="PPS" class="bg-neutral-950" type="number" />
+
+      <button class="bg-neutral-50" @click="() => (flipped = false)">
+        PLAY PAUSE
+      </button>
+    </div>
+
     <canvas
-      ref="canvas"
-      class="absolute top-0 left-0 pointer-events-none"
+      ref="canvasL"
+      class="absolute top-0 left-0 pointer-events-none opacity-[0.1] z-[1]"
+    ></canvas>
+    <canvas
+      ref="canvasP"
+      class="absolute top-0 left-0 pointer-events-none opacity-100"
     ></canvas>
   </div>
 </template>
 <script setup lang="ts">
-const canvas = ref<HTMLCanvasElement | null>(null);
-const context = ref<CanvasRenderingContext2D>();
+const { screenWidth, screenHeight } = useScreenSize();
+
+const canvasP = ref<HTMLCanvasElement | null>(null);
+const canvasL = ref<HTMLCanvasElement | null>(null);
+
+const contextP = useCanvasContext(canvasP, screenWidth, screenHeight);
+const contextL = useCanvasContext(canvasL, screenWidth, screenHeight);
+
+// Card transform
 
 const cardRef = ref<HTMLElement>();
 
-const { screenWidth, screenHeight } = useScreenSize();
+const flipped = ref(false);
 
-watchEffect(() => {
-  if (!canvas.value) return;
-  context.value = canvas.value?.getContext('2d') as CanvasRenderingContext2D;
-});
-
-watch([context, screenWidth, screenHeight], (upd) => {
-  if (!upd[0] || !canvas.value) return;
-
-  canvas.value.width = upd[1] * devicePixelRatio;
-  canvas.value.height = upd[2] * devicePixelRatio;
-  canvas.value.style.transform = `scale(${1 / devicePixelRatio})`;
-  canvas.value.style.transformOrigin = 'top left';
-  upd[0].scale(devicePixelRatio, devicePixelRatio);
-});
-
-// Card transform
 const { mouseX, mouseY } = useMousePos();
 
 const mousePercentX = computed(() =>
@@ -89,6 +88,10 @@ const mousePercentX = computed(() =>
 );
 const mousePercentY = computed(() =>
   range(0, screenHeight.value, 0, 100, mouseY.value)
+);
+
+const mouseDistance = computed(
+  () => Math.abs(mousePercentX.value - 50) + Math.abs(mousePercentY.value - 50)
 );
 
 const rotationX = computed(() => {
@@ -136,7 +139,7 @@ onMounted(() => {
 });
 
 // Main loop
-const isGeneratingParticles = ref(false);
+const isGeneratingParticles = ref(true);
 
 const playing = ref(true);
 
@@ -202,12 +205,15 @@ type Particle = {
 };
 
 const drawParticles = (ctx: CanvasRenderingContext2D) => {
-  ctx.fillStyle = 'rgb(255, 255, 255)';
+  //const color = range(0, 100, 255, 100, mouseDistance.value);
+  const color = 255;
+  ctx.fillStyle = `rgb(${color}, ${color}, ${color})`;
   ctx.beginPath();
   particles.forEach((p) => {
     ctx.moveTo(p.x, p.y);
     ctx.arc(p.x, p.y, p.size, 0, 2 * Math.PI);
   });
+
   ctx.fill();
 };
 
@@ -225,7 +231,7 @@ const drawInfo = (ctx: CanvasRenderingContext2D) => {
   });
 };
 
-const drawLines = (ctx: CanvasRenderingContext2D) => {
+const drawLight = (ctx: CanvasRenderingContext2D) => {
   const fromMouseToCard = [
     cardPoints.value.tl,
     cardPoints.value.tr,
@@ -255,37 +261,51 @@ const drawLines = (ctx: CanvasRenderingContext2D) => {
     ctx.lineTo(a.to.x, a.to.y);
     ctx.lineTo(b.to.x, b.to.y);
     ctx.lineTo(b.from.x, b.from.y);
-    ctx.lineWidth = 15;
+    ctx.moveTo(a.from.x, a.from.y);
 
-    ctx.strokeStyle = '';
+    //  ctx.fillStyle = '#fff';
+
+    // Create gradient
+    const grad = ctx.createRadialGradient(
+      screenWidth.value / 2,
+      screenHeight.value / 2,
+      15,
+      screenWidth.value / 2,
+      screenHeight.value / 2,
+      screenHeight.value + screenWidth.value
+    );
+    grad.addColorStop(0, 'black');
+    grad.addColorStop(0.14, 'black');
+    grad.addColorStop(0.5, 'white');
+    grad.addColorStop(1, 'black');
+
+    ctx.fillStyle = grad;
+
     ctx.fill();
   }
 };
 
 const frameUpdate = (secFromLast: number) => {
-  if (!context.value) return;
+  if (!contextP.value || !contextL.value) return;
   if (isGeneratingParticles.value) {
     generateParticles(secFromLast);
   }
   simulateParticles(secFromLast);
-  clearScreen(context.value);
-  drawParticles(context.value);
-  drawInfo(context.value);
-  drawLines(context.value);
+  clearScreen(contextP.value);
+  drawParticles(contextP.value);
+  // drawInfo(contextP.value);
+  clearScreen(contextL.value);
+  //drawLight(contextL.value);
 };
 
 const clearScreen = (ctx: CanvasRenderingContext2D) => {
   ctx.clearRect(0, 0, screenWidth.value, screenHeight.value);
 };
 
-const PPS = ref(100);
+const PPS = ref(300);
 
 const P_SPREAD = 20;
 const P_MULT = 15;
-
-const getDistanceBetweenPoints = (a: Point, b: Point) => {
-  return Math.abs(Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2)));
-};
 
 const getRandomPointOnQuadrilateral = (
   p1: Point,
@@ -319,18 +339,14 @@ const getRandomPointOnQuadrilateral = (
     const line = lines[li];
 
     return interpolatePoints(...lines[li], progress);
-
-    const x = (line[0].x - line[1].x) * progress + line[1].x;
-    const y = (line[0].y - line[1].y) * progress + line[1].y;
-
-    return { x, y };
   }
 
   return { x: screenWidth.value / 2, y: screenHeight.value / 2 };
 };
 
 const generateParticles = (secFromLast: number) => {
-  const rawCount = secFromLast * PPS.value;
+  const rawCount =
+    secFromLast * range(0, 100, 0, PPS.value, mouseDistance.value);
 
   const count =
     rawCount > 1 ? Math.ceil(rawCount) : Math.random() < rawCount ? 1 : 0;
@@ -350,8 +366,9 @@ const generateParticles = (secFromLast: number) => {
       y,
       velX: getRandomNumber(bXv - P_SPREAD, bXv + P_SPREAD) * P_MULT,
       velY: getRandomNumber(bYv - P_SPREAD, bYv + P_SPREAD) * P_MULT,
-      ttl: getRandomNumber(3, 14),
-      size: getRandomNumber(1, 7),
+      ttl: 100,
+      size:
+        Math.random() > 0.9 ? getRandomNumber(5, 15) : getRandomNumber(1, 5),
     });
   }
 };

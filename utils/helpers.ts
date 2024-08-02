@@ -1,3 +1,28 @@
+export const useCanvasContext = (
+  canvas: Ref<HTMLCanvasElement | null>,
+  screenWidth: Ref<number>,
+  screenHeight: Ref<number>
+) => {
+  const context = ref<CanvasRenderingContext2D>();
+
+  watchEffect(() => {
+    if (!canvas.value) return;
+    context.value = canvas.value?.getContext('2d') as CanvasRenderingContext2D;
+  });
+
+  watch([context, screenWidth, screenHeight], (upd) => {
+    if (!upd[0] || !canvas.value) return;
+
+    canvas.value.width = upd[1] * devicePixelRatio;
+    canvas.value.height = upd[2] * devicePixelRatio;
+    canvas.value.style.transform = `scale(${1 / devicePixelRatio})`;
+    canvas.value.style.transformOrigin = 'top left';
+    upd[0].scale(devicePixelRatio, devicePixelRatio);
+  });
+
+  return context;
+};
+
 export const useScreenSize = () => {
   const screenWidth = ref(0);
   const screenHeight = ref(0);
@@ -58,9 +83,17 @@ export const range = (
 
 export type Point = { x: number; y: number };
 
-export const interpolatePoints = (a: Point, b: Point, progress: number): Point => {
+export const interpolatePoints = (
+  a: Point,
+  b: Point,
+  progress: number
+): Point => {
   const x = (a.x - b.x) * progress + b.x;
   const y = (a.y - b.y) * progress + b.y;
 
   return { x, y };
+};
+
+export const getDistanceBetweenPoints = (a: Point, b: Point) => {
+  return Math.abs(Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2)));
 };
