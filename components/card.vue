@@ -5,40 +5,39 @@
   >
     <div
       ref="cardRef"
-      class="flex z-10"
+      class="flex z-10 fixed"
       :style="{
         perspective: '300px',
+        left: '50%',
+        top: `${range(0, 100, 50, 0, FST)}%`,
+        transform: `translate(-50%, ${range(0, 100, -50, 0, FST)}%)`,
       }"
     >
       <div
         :style="{
           transform: rotationStyle,
         }"
-        class="w-[300px] h-[450px] rounded-[16px] p-0.5 relative overflow-hidden"
+        class="relative overflow-hidden"
       >
-        <div
-          class="w-full h-full rounded-[14px] flex flex-col p-4 relative backdrop-blur-sm border-2 bg-black bg-opacity-95"
-        >
+        <div class="w-full h-full flex flex-col relative box-border">
+          <!--Card overlays-->
           <img
             src="/public/over1.jpg"
-            class="absolute left-1/2 top-1/2 w-[1500px] h-[1500px] z-20 max-w-[unset] opacity-10 pointer-events-none"
+            class="absolute left-1/2 top-1/2 w-[1500px] h-[1500px] z-20 max-w-[unset] pointer-events-none"
             :style="{
+              opacity: range(0, 100, 50, 0, FST),
               transform: `translateX(calc(-50% + ${overlay1X}%)) translateY(calc(-50% + ${overlay1Y}%))`,
             }"
           />
+
+          <!--Card position points to grab it's coordinates relative to screen-->
           <div ref="cardTL" class="absolute top-1 left-1"></div>
           <div ref="cardTR" class="absolute top-1 right-1"></div>
           <div ref="cardBR" class="absolute bottom-1 right-1"></div>
           <div ref="cardBL" class="absolute bottom-1 left-1"></div>
 
-          <div class="relative z-50">
-            <h1 class="text-2xl font-bold">KIRILL KLEYMENOV</h1>
-            <br />
-            <h2 class="text-xl">
-              Frontend focused fullstack developer.
-              <br />Ex motion designer
-            </h2>
-          </div>
+          <!--Card Inner content-->
+          <CardContent />
         </div>
       </div>
     </div>
@@ -68,6 +67,9 @@
 </template>
 <script setup lang="ts">
 const { screenWidth, screenHeight } = useScreenSize();
+const { scroll } = useScroll();
+
+const FST = computed(() => range(0, screenHeight.value, 0, 100, scroll.value));
 
 const canvasP = ref<HTMLCanvasElement | null>(null);
 const canvasL = ref<HTMLCanvasElement | null>(null);
@@ -81,24 +83,26 @@ const cardRef = ref<HTMLElement>();
 
 const flipped = ref(false);
 
-const { mouseX, mouseY } = useMousePos();
+const { mouseX, mouseY, hasMouse } = useMousePos();
 
 const mousePercentX = computed(() =>
-  range(0, screenWidth.value, 0, 100, mouseX.value)
+  hasMouse.value ? range(0, screenWidth.value, 0, 100, mouseX.value) : 50
 );
 const mousePercentY = computed(() =>
-  range(0, screenHeight.value, 0, 100, mouseY.value)
+  hasMouse.value ? range(0, screenHeight.value, 0, 100, mouseY.value) : 50
 );
 
-const mouseDistance = computed(
-  () => Math.abs(mousePercentX.value - 50) + Math.abs(mousePercentY.value - 50)
+const mouseDistance = computed(() =>
+  hasMouse.value
+    ? Math.abs(mousePercentX.value - 50) + Math.abs(mousePercentY.value - 50)
+    : 0
 );
 
 const rotationX = computed(() => {
-  return range(0, 100, -30, 30, mousePercentX.value);
+  return range(0, 100, -30, 30, mousePercentX.value) * (1 - FST.value / 100);
 });
 const rotationY = computed(() => {
-  return range(0, 100, 30, -30, mousePercentY.value);
+  return range(0, 100, 30, -30, mousePercentY.value) * (1 - FST.value / 100);
 });
 
 const overlay1X = computed(() => {
@@ -109,7 +113,7 @@ const overlay1Y = computed(() => {
 });
 
 const rotationStyle = computed(() => {
-  return `rotateY(${rotationX.value}deg) rotateX(${rotationY.value}deg  )`;
+  return `rotateY(${rotationX.value}deg) rotateX(${rotationY.value}deg)`;
 });
 
 const cardTR = ref<HTMLElement>();
@@ -124,12 +128,16 @@ const cardPoints = ref({
   br: { x: 0, y: 0 },
 });
 
+const addScrollToY = (p: Point) => {
+  p.y += scroll.value;
+  return p;
+};
 const updateCardPoint = () => {
   if (!cardTL.value || !cardBL.value || !cardTR.value || !cardBR.value) return;
-  cardPoints.value.tl = cardTL.value.getBoundingClientRect();
-  cardPoints.value.bl = cardBL.value.getBoundingClientRect();
-  cardPoints.value.tr = cardTR.value.getBoundingClientRect();
-  cardPoints.value.br = cardBR.value.getBoundingClientRect();
+  cardPoints.value.tl = addScrollToY(cardTL.value.getBoundingClientRect());
+  cardPoints.value.bl = addScrollToY(cardBL.value.getBoundingClientRect());
+  cardPoints.value.tr = addScrollToY(cardTR.value.getBoundingClientRect());
+  cardPoints.value.br = addScrollToY(cardBR.value.getBoundingClientRect());
 };
 
 onMounted(() => {
@@ -141,7 +149,7 @@ onMounted(() => {
 // Main loop
 const isGeneratingParticles = ref(true);
 
-const playing = ref(true);
+const playing = ref(false);
 
 let lastFrameAt: number | null = null;
 
@@ -174,18 +182,29 @@ const renderLoop: FrameRequestCallback = (timestamp) => {
   requestAnimationFrame(renderLoop);
 };
 
+// Pause animation when its not needed
+
+const stopAnimation = () => {
+  playing.value = false;
+};
+
+const startAnimation = () => {
+  playing.value = true;
+  nextTick(() => {
+    requestAnimationFrame(renderLoop);
+  });
+};
+
 const playOnVisible = () => {
   if (document.hidden) {
-    playing.value = false;
+    stopAnimation();
   } else if (!playing.value) {
-    playing.value = true;
-    requestAnimationFrame(renderLoop);
+    startAnimation();
   }
 };
 
 onMounted(() => {
-  playing.value = true;
-  requestAnimationFrame(renderLoop);
+  startAnimation();
   document.addEventListener('visibilitychange', playOnVisible);
 });
 
@@ -193,6 +212,16 @@ onUnmounted(() => {
   document.removeEventListener('visibilitychange', playOnVisible);
 });
 
+// Disable animation when user scrolled off, restore it when he scrolls back
+watch([FST], (v) => {
+  if (v[0] >= 100) {
+    stopAnimation();
+  } else if (!playing.value) {
+    startAnimation();
+  }
+});
+
+// Particles
 let particles: Particle[] = [];
 
 type Particle = {
@@ -241,7 +270,7 @@ const drawLight = (ctx: CanvasRenderingContext2D) => {
     return { from: { x: mouseX.value, y: mouseY.value }, to: v };
   });
 
-  const lFactor = 2;
+  const lFactor = 4;
   const toDraw = fromMouseToCard.map((a) => {
     const mX = a.to.x - a.from.x;
     const mY = a.to.y - a.from.y;
@@ -263,25 +292,8 @@ const drawLight = (ctx: CanvasRenderingContext2D) => {
     ctx.lineTo(b.from.x, b.from.y);
     ctx.moveTo(a.from.x, a.from.y);
 
-    //  ctx.fillStyle = '#fff';
-
-    // Create gradient
-    const grad = ctx.createRadialGradient(
-      screenWidth.value / 2,
-      screenHeight.value / 2,
-      15,
-      screenWidth.value / 2,
-      screenHeight.value / 2,
-      screenHeight.value + screenWidth.value
-    );
-    grad.addColorStop(0, 'black');
-    grad.addColorStop(0.14, 'black');
-    grad.addColorStop(0.5, 'white');
-    grad.addColorStop(1, 'black');
-
-    ctx.fillStyle = grad;
-
-    ctx.fill();
+    ctx.strokeStyle = 'rgb(50,50,50)';
+    ctx.stroke();
   }
 };
 
@@ -294,8 +306,8 @@ const frameUpdate = (secFromLast: number) => {
   clearScreen(contextP.value);
   drawParticles(contextP.value);
   // drawInfo(contextP.value);
-  clearScreen(contextL.value);
-  drawLight(contextL.value);
+  //clearScreen(contextL.value);
+  //drawLight(contextL.value);
 };
 
 const clearScreen = (ctx: CanvasRenderingContext2D) => {
@@ -307,46 +319,9 @@ const PPS = ref(300);
 const P_SPREAD = 20;
 const P_MULT = 15;
 
-const getRandomPointOnQuadrilateral = (
-  p1: Point,
-  p2: Point,
-  p3: Point,
-  p4: Point
-): Point => {
-  const lines: [Point, Point][] = [
-    [p1, p2],
-    [p2, p3],
-    [p3, p4],
-    [p4, p1],
-  ];
-
-  const linesLen = lines.map((v) => getDistanceBetweenPoints(v[0], v[1]));
-
-  const randomRes = getRandomNumber(
-    0,
-    linesLen.reduce((a, b) => a + b)
-  );
-
-  let lenStart = 0;
-  for (let li = 0; li < lines.length; li++) {
-    const end = lenStart + linesLen[li];
-    if (end < randomRes) {
-      lenStart += linesLen[li];
-      continue;
-    }
-    const progress = range(lenStart, end, 0, 1, randomRes);
-
-    const line = lines[li];
-
-    return interpolatePoints(...lines[li], progress);
-  }
-
-  return { x: screenWidth.value / 2, y: screenHeight.value / 2 };
-};
-
 const generateParticles = (secFromLast: number) => {
   const rawCount =
-    secFromLast * range(0, 100, 0, PPS.value, mouseDistance.value);
+    secFromLast * range(0, 100, 25, PPS.value, mouseDistance.value);
 
   const count =
     rawCount > 1 ? Math.ceil(rawCount) : Math.random() < rawCount ? 1 : 0;

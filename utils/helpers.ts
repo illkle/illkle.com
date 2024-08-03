@@ -66,10 +66,12 @@ export const useScroll = () => {
 export const useMousePos = () => {
   const mouseX = ref(0);
   const mouseY = ref(0);
+  const hasMouse = ref(false);
 
   const updateMousePos = (e: MouseEvent) => {
     mouseX.value = e.clientX;
     mouseY.value = e.clientY;
+    hasMouse.value = true;
   };
 
   onMounted(() => {
@@ -80,7 +82,7 @@ export const useMousePos = () => {
     removeEventListener('mousemove', updateMousePos);
   });
 
-  return { mouseX, mouseY };
+  return { mouseX, mouseY, hasMouse };
 };
 
 export const getRandomNumber = (min: number, max: number) => {
@@ -115,4 +117,42 @@ export const interpolatePoints = (
 
 export const getDistanceBetweenPoints = (a: Point, b: Point) => {
   return Math.abs(Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2)));
+};
+
+// Takes shape as 4 coordinates and returns random point on it's perimeter
+export const getRandomPointOnQuadrilateral = (
+  p1: Point,
+  p2: Point,
+  p3: Point,
+  p4: Point
+): Point => {
+  const lines: [Point, Point][] = [
+    [p1, p2],
+    [p2, p3],
+    [p3, p4],
+    [p4, p1],
+  ];
+
+  const linesLen = lines.map((v) => getDistanceBetweenPoints(v[0], v[1]));
+
+  const randomRes = getRandomNumber(
+    0,
+    linesLen.reduce((a, b) => a + b)
+  );
+
+  let lenStart = 0;
+  for (let li = 0; li < lines.length; li++) {
+    const end = lenStart + linesLen[li];
+    if (end < randomRes) {
+      lenStart += linesLen[li];
+      continue;
+    }
+    const progress = range(lenStart, end, 0, 1, randomRes);
+
+    return interpolatePoints(...lines[li], progress);
+  }
+
+  // This should never happen
+  console.error('getRandomPointOnQuadrilateral returning fallback value');
+  return p1;
 };
