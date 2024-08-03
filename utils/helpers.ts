@@ -44,6 +44,25 @@ export const useScreenSize = () => {
   return { screenHeight, screenWidth };
 };
 
+export const useScroll = () => {
+  const scroll = ref(0);
+
+  const updateScroll = () => {
+    scroll.value = window.scrollY;
+  };
+
+  onMounted(() => {
+    addEventListener('scroll', updateScroll);
+    updateScroll();
+  });
+
+  onUnmounted(() => {
+    removeEventListener('scroll', updateScroll);
+  });
+
+  return { scroll };
+};
+
 export const useMousePos = () => {
   const mouseX = ref(0);
   const mouseY = ref(0);

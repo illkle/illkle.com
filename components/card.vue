@@ -7,14 +7,14 @@
       ref="cardRef"
       class="flex z-10"
       :style="{
-        perspective: '400px',
+        perspective: '300px',
       }"
     >
       <div
         :style="{
           transform: rotationStyle,
         }"
-        class="w-[600px] h-[400px] rounded-[16px] p-0.5 relative overflow-hidden"
+        class="w-[300px] h-[450px] rounded-[16px] p-0.5 relative overflow-hidden"
       >
         <div
           class="w-full h-full rounded-[14px] flex flex-col p-4 relative backdrop-blur-sm border-2 bg-black bg-opacity-95"
@@ -58,7 +58,7 @@
 
     <canvas
       ref="canvasL"
-      class="absolute top-0 left-0 pointer-events-none opacity-[0.1] z-[1]"
+      class="absolute top-0 left-0 pointer-events-none opacity-[1] mix-2blend-color-dodge z-[1]"
     ></canvas>
     <canvas
       ref="canvasP"
@@ -205,8 +205,8 @@ type Particle = {
 };
 
 const drawParticles = (ctx: CanvasRenderingContext2D) => {
-  //const color = range(0, 100, 255, 100, mouseDistance.value);
-  const color = 255;
+  const color = range(0, 100, 255, 100, mouseDistance.value);
+  //const color = 255;
   ctx.fillStyle = `rgb(${color}, ${color}, ${color})`;
   ctx.beginPath();
   particles.forEach((p) => {
@@ -295,7 +295,7 @@ const frameUpdate = (secFromLast: number) => {
   drawParticles(contextP.value);
   // drawInfo(contextP.value);
   clearScreen(contextL.value);
-  //drawLight(contextL.value);
+  drawLight(contextL.value);
 };
 
 const clearScreen = (ctx: CanvasRenderingContext2D) => {
