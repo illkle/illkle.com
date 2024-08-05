@@ -3,11 +3,13 @@ export const useCanvasContext = (
   screenWidth: Ref<number>,
   screenHeight: Ref<number>
 ) => {
-  const context = ref<CanvasRenderingContext2D>();
+  const context = ref<WebGL2RenderingContext>();
 
   watchEffect(() => {
     if (!canvas.value) return;
-    context.value = canvas.value?.getContext('2d') as CanvasRenderingContext2D;
+    context.value = canvas.value?.getContext(
+      'webgl2'
+    ) as WebGL2RenderingContext;
   });
 
   watch([context, screenWidth, screenHeight], (upd) => {
@@ -17,7 +19,7 @@ export const useCanvasContext = (
     canvas.value.height = upd[2] * devicePixelRatio;
     canvas.value.style.transform = `scale(${1 / devicePixelRatio})`;
     canvas.value.style.transformOrigin = 'top left';
-    upd[0].scale(devicePixelRatio, devicePixelRatio);
+    //upd[0].scale(devicePixelRatio, devicePixelRatio);
   });
 
   return context;
@@ -87,6 +89,14 @@ export const useMousePos = () => {
 
 export const getRandomNumber = (min: number, max: number) => {
   return Math.random() * (max - min) + min;
+};
+
+export const getRandomNumber2 = (min: number, max: number) => {
+  return (
+    min +
+    getRandomNumber(0, (max - min) / 2) +
+    getRandomNumber(0, (max - min) / 2)
+  );
 };
 
 export const lerp = (x: number, y: number, a: number) => x * (1 - a) + y * a;

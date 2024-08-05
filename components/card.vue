@@ -1,8 +1,5 @@
 <template>
-  <div
-    class="flex h-screen w-screen overflow-hidden items-center justify-center"
-    :style="{}"
-  >
+  <div class="" :style="{}">
     <div
       ref="cardRef"
       class="flex z-10 fixed"
@@ -17,7 +14,7 @@
         :style="{
           transform: rotationStyle,
         }"
-        class="relative overflow-hidden"
+        class="relative overflow-hidden opacity-100 rounded-lg"
       >
         <div class="w-full h-full flex flex-col relative box-border">
           <!--Card overlays-->
@@ -42,40 +39,216 @@
       </div>
     </div>
 
-    <div v-if="false">
-      <div>Frametime: {{ frameTime.toFixed(6) }}</div>
-
-      <div>Time budget: {{ (1000 / fps).toFixed(4) }}</div>
-      <div>FPS {{ fps.toFixed(0) }} (approx)</div>
-
-      <input v-model="PPS" class="bg-neutral-950" type="number" />
-
-      <button class="bg-neutral-50" @click="() => (flipped = false)">
-        PLAY PAUSE
-      </button>
-    </div>
-
-    <canvas
-      ref="canvasL"
-      class="absolute top-0 left-0 pointer-events-none opacity-[1] mix-2blend-color-dodge z-[1]"
-    ></canvas>
-    <canvas
+    <div
       ref="canvasP"
-      class="absolute top-0 left-0 pointer-events-none opacity-100"
-    ></canvas>
+      class="absolute top-0 overflow-hidden pointer-events-none opacity-100 bg-red-300"
+    ></div>
   </div>
 </template>
 <script setup lang="ts">
+import * as THREE from 'three';
+import FragmentShader from './fragmentShader.glsl';
+import VertexShader from './vertexShader.glsl';
+
 const { screenWidth, screenHeight } = useScreenSize();
 const { scroll } = useScroll();
 
 const FST = computed(() => range(0, screenHeight.value, 0, 100, scroll.value));
 
-const canvasP = ref<HTMLCanvasElement | null>(null);
-const canvasL = ref<HTMLCanvasElement | null>(null);
+const canvasP = ref<HTMLDivElement | null>(null);
 
-const contextP = useCanvasContext(canvasP, screenWidth, screenHeight);
-const contextL = useCanvasContext(canvasL, screenWidth, screenHeight);
+let renderer: THREE.WebGLRenderer;
+let scene: THREE.Scene | null;
+let camera: THREE.PerspectiveCamera | null;
+
+onMounted(() => {
+  if (!canvasP.value) return;
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(
+    75,
+    document.documentElement.clientWidth /
+      document.documentElement.clientHeight,
+    0.1,
+    1000
+  );
+
+  renderer = new THREE.WebGLRenderer();
+
+  renderer.setSize(
+    document.documentElement.clientWidth,
+    document.documentElement.clientHeight
+  );
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  canvasP.value.appendChild(renderer.domElement);
+
+  window.addEventListener('resize', () => {
+    if (!camera) return;
+    renderer.setSize(
+      document.documentElement.clientWidth,
+      document.documentElement.clientHeight
+    );
+    camera.aspect =
+      document.documentElement.clientWidth /
+      document.documentElement.clientHeight;
+    camera.updateProjectionMatrix();
+  });
+
+  camera.position.z = 100;
+
+  // Geo
+
+  const particlesGeo = new THREE.BufferGeometry();
+
+  const count = 100000;
+
+  const positions = new THREE.BufferAttribute(
+    new Float32Array([...Array(count * 3)].map(() => 0)),
+    3
+  );
+  const sizes = new THREE.BufferAttribute(
+    new Float32Array([...Array(count)].map(() => getRandomNumber(1000, 3000))),
+    1
+  );
+  const ttl = new THREE.BufferAttribute(
+    new Float32Array([...Array(count)].map(() => 0.2)),
+    1
+  );
+  const timeBorn = new THREE.BufferAttribute(
+    new Float32Array([...Array(count)].map(() => 0)),
+    1
+  );
+  const velocities = new THREE.BufferAttribute(
+    new Float32Array([...Array(count * 3)].map(() => getRandomNumber(-50, 50))),
+    3
+  );
+
+  const attractions = new THREE.BufferAttribute(
+    new Float32Array([...Array(count * 3)].map(() => 0)),
+    3
+  );
+
+  particlesGeo.setAttribute('position', positions);
+  particlesGeo.setAttribute('aSize', sizes);
+  particlesGeo.setAttribute('aVelocity', velocities);
+  particlesGeo.setAttribute('aTimeWhenDead', ttl);
+  particlesGeo.setAttribute('aTimeBorn', timeBorn);
+  particlesGeo.setAttribute('aAttractions', timeBorn);
+
+  let startFrom = 0;
+  let lastClock: number | null = null;
+
+  const itemTimeCost = 1 / count;
+
+  const getInd = (v: number) => {
+    return Math.ceil((v - Math.floor(v)) / itemTimeCost);
+  };
+
+  const updateStuff = (clock: number) => {
+    let setUpdate = false;
+
+    if (!lastClock) {
+      lastClock = clock;
+      return;
+    }
+
+    const bXv = -rotationX.value;
+    const bYv = -rotationY.value;
+
+    let finishAt = getInd(lastClock);
+    let toSetAsStart = finishAt;
+
+    if (finishAt < startFrom) {
+      finishAt = count;
+      toSetAsStart = 0;
+    }
+
+    for (let i = startFrom; i < finishAt; i++) {
+      if (ttl.array[i] > clock) continue;
+      const to = i * 3;
+
+      if (!setUpdate) {
+        positions.needsUpdate = true;
+        velocities.needsUpdate = true;
+        sizes.needsUpdate = true;
+        ttl.needsUpdate = true;
+        timeBorn.needsUpdate = true;
+        attractions.needsUpdate = true;
+        setUpdate = true;
+      }
+
+      const { x, y } = getRandomPointOnQuadrilateral(
+        cardPoints.value.tl,
+        cardPoints.value.tr,
+        cardPoints.value.br,
+        cardPoints.value.bl
+      );
+
+      positions.array[to] = (x - screenWidth.value / 2) * 0.12;
+      positions.array[to + 1] = (y - screenHeight.value / 2) * 0.12;
+      positions.array[to + 2] = 0;
+
+      velocities.array[to] =
+        getRandomNumber(bXv - P_SPREAD, bXv + P_SPREAD) * P_MULT;
+      velocities.array[to + 1] =
+        getRandomNumber(bYv - P_SPREAD, bYv + P_SPREAD) * P_MULT;
+      velocities.array[to + 2] = 0;
+
+      sizes.array[i] = Math.max(
+        0,
+        Math.random() > 0.98
+          ? getRandomNumber2(-5000, 5000)
+          : getRandomNumber2(-500, 500)
+      );
+
+      attractions.array[to] = getRandomNumber(-1, 1);
+      attractions.array[to + 1] = getRandomNumber(-1, 1);
+      attractions.array[to + 2] = 1000;
+
+      ttl.array[i] = clock + getRandomNumber(3, 7);
+      timeBorn.array[i] = clock;
+    }
+
+    startFrom = toSetAsStart;
+    lastClock = clock;
+  };
+
+  const material2 = new THREE.ShaderMaterial({
+    vertexShader: VertexShader,
+    fragmentShader: FragmentShader,
+    blending: THREE.AdditiveBlending,
+    vertexColors: true,
+    depthWrite: false,
+    uniforms: {
+      uSize: { value: renderer.getPixelRatio() },
+      uTime: { value: 0 },
+    },
+  });
+
+  const geometry = new THREE.PlaneGeometry(1, 1, 32, 32);
+  const particles = new THREE.Points(particlesGeo, material2);
+  scene.add(particles);
+  const mesh = new THREE.Mesh(geometry, material2);
+  scene.add(mesh);
+
+  const clock = new THREE.Clock();
+  clock.start();
+  const animationLoop: FrameRequestCallback = (timestamp) => {
+    if (!scene || !camera) return;
+
+    const elapsedTime = clock.getElapsedTime();
+    // Update material
+    material2.uniforms.uTime.value = elapsedTime;
+
+    updateStuff(elapsedTime);
+
+    renderer.render(scene, camera);
+  };
+
+  renderer.setAnimationLoop(animationLoop);
+});
+
+const P_SPREAD = 40;
+const P_MULT = 1;
 
 // Card transform
 
@@ -146,81 +319,6 @@ onMounted(() => {
   addEventListener('scroll', updateCardPoint);
 });
 
-// Main loop
-const isGeneratingParticles = ref(true);
-
-const playing = ref(false);
-
-let lastFrameAt: number | null = null;
-
-const frameTime = ref(0);
-const fps = ref(0);
-let framenum = 1;
-
-const renderLoop: FrameRequestCallback = (timestamp) => {
-  if (!playing.value) return;
-
-  if (framenum === 60) {
-    performance.mark('frameStart');
-    framenum = 0;
-  } else {
-    framenum++;
-  }
-
-  const secFromLast =
-    timestamp && lastFrameAt ? (timestamp - lastFrameAt) / 1000 : 0;
-  lastFrameAt = timestamp;
-  frameUpdate(secFromLast);
-
-  if (framenum == 0) {
-    performance.mark('frameEnd');
-    const p = performance.measure('frame', 'frameStart', 'frameEnd');
-
-    fps.value = 1 / secFromLast;
-    frameTime.value = p.duration;
-  }
-  requestAnimationFrame(renderLoop);
-};
-
-// Pause animation when its not needed
-
-const stopAnimation = () => {
-  playing.value = false;
-};
-
-const startAnimation = () => {
-  playing.value = true;
-  nextTick(() => {
-    requestAnimationFrame(renderLoop);
-  });
-};
-
-const playOnVisible = () => {
-  if (document.hidden) {
-    stopAnimation();
-  } else if (!playing.value) {
-    startAnimation();
-  }
-};
-
-onMounted(() => {
-  startAnimation();
-  document.addEventListener('visibilitychange', playOnVisible);
-});
-
-onUnmounted(() => {
-  document.removeEventListener('visibilitychange', playOnVisible);
-});
-
-// Disable animation when user scrolled off, restore it when he scrolls back
-watch([FST], (v) => {
-  if (v[0] >= 100) {
-    stopAnimation();
-  } else if (!playing.value) {
-    startAnimation();
-  }
-});
-
 // Particles
 let particles: Particle[] = [];
 
@@ -231,33 +329,6 @@ type Particle = {
   velY: number;
   ttl: number;
   size: number;
-};
-
-const drawParticles = (ctx: CanvasRenderingContext2D) => {
-  const color = range(0, 100, 255, 100, mouseDistance.value);
-  //const color = 255;
-  ctx.fillStyle = `rgb(${color}, ${color}, ${color})`;
-  ctx.beginPath();
-  particles.forEach((p) => {
-    ctx.moveTo(p.x, p.y);
-    ctx.arc(p.x, p.y, p.size, 0, 2 * Math.PI);
-  });
-
-  ctx.fill();
-};
-
-const drawInfo = (ctx: CanvasRenderingContext2D) => {
-  ctx.fillStyle = '#FFF';
-  ctx.font = '12px';
-  ctx.fillText(`Particles: ${particles.length}`, 10, 10);
-
-  Object.values(cardPoints.value).forEach((p) => {
-    ctx.fillStyle = 'red';
-    ctx.beginPath();
-    ctx.moveTo(p.x, p.y);
-    ctx.arc(p.x, p.y, 10, 0, 2 * Math.PI);
-    ctx.fill();
-  });
 };
 
 const drawLight = (ctx: CanvasRenderingContext2D) => {
@@ -297,27 +368,7 @@ const drawLight = (ctx: CanvasRenderingContext2D) => {
   }
 };
 
-const frameUpdate = (secFromLast: number) => {
-  if (!contextP.value || !contextL.value) return;
-  if (isGeneratingParticles.value) {
-    generateParticles(secFromLast);
-  }
-  simulateParticles(secFromLast);
-  clearScreen(contextP.value);
-  drawParticles(contextP.value);
-  // drawInfo(contextP.value);
-  //clearScreen(contextL.value);
-  //drawLight(contextL.value);
-};
-
-const clearScreen = (ctx: CanvasRenderingContext2D) => {
-  ctx.clearRect(0, 0, screenWidth.value, screenHeight.value);
-};
-
 const PPS = ref(300);
-
-const P_SPREAD = 20;
-const P_MULT = 15;
 
 const generateParticles = (secFromLast: number) => {
   const rawCount =
