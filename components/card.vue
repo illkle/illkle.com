@@ -14,7 +14,7 @@
         :style="{
           transform: rotationStyle,
         }"
-        class="relative overflow-hidden opacity-100 rounded-lg"
+        class="relative overflow-hidden opacity-0 rounded-lg"
       >
         <div class="w-full h-full flex flex-col relative box-border">
           <!--Card overlays-->
@@ -49,6 +49,8 @@
 import * as THREE from 'three';
 import FragmentShader from './fragmentShader.glsl';
 import VertexShader from './vertexShader.glsl';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import CustomShaderMaterial from 'three-custom-shader-material/vanilla';
 
 const { screenWidth, screenHeight } = useScreenSize();
 const { scroll } = useScroll();
@@ -93,13 +95,16 @@ onMounted(() => {
     camera.updateProjectionMatrix();
   });
 
+  const controls = new OrbitControls(camera, document.documentElement);
+
   camera.position.z = 100;
+  controls.update();
 
   // Geo
 
   const particlesGeo = new THREE.BufferGeometry();
 
-  const count = 100000;
+  const count = 50000;
 
   const positions = new THREE.BufferAttribute(
     new Float32Array([...Array(count * 3)].map(() => 0)),
@@ -164,17 +169,27 @@ onMounted(() => {
 
     for (let i = startFrom; i < finishAt; i++) {
       if (ttl.array[i] > clock) continue;
-      const to = i * 3;
 
       if (!setUpdate) {
-        positions.needsUpdate = true;
-        velocities.needsUpdate = true;
-        sizes.needsUpdate = true;
-        ttl.needsUpdate = true;
-        timeBorn.needsUpdate = true;
-        attractions.needsUpdate = true;
+        const tStart = startFrom * 3;
+        const end = finishAt * 3 + 2;
+        const count = end - tStart;
+
+        [positions, velocities, sizes, ttl, timeBorn, attractions].forEach(
+          (v) => {
+            if (v.itemSize === 1) {
+              v.addUpdateRange(startFrom, finishAt - startFrom);
+            } else if (v.itemSize === 3) {
+              v.addUpdateRange(tStart, count);
+            }
+            v.needsUpdate = true;
+          }
+        );
+
         setUpdate = true;
       }
+
+      const to = i * 3;
 
       const { x, y } = getRandomPointOnQuadrilateral(
         cardPoints.value.tl,
@@ -223,15 +238,29 @@ onMounted(() => {
       uTime: { value: 0 },
     },
   });
+  const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
 
-  const geometry = new THREE.PlaneGeometry(1, 1, 32, 32);
+  const geometry = new THREE.BoxGeometry(10, 10, 32, 32);
+
+  const material3 = new CustomShaderMaterial({
+    baseMaterial: material,
+    vertexShader: VertexShader,
+    fragmentShader: FragmentShader,
+    uniforms: {
+      uSize: { value: renderer.getPixelRatio() },
+      uTime: { value: 0 },
+    },
+  });
+
   const particles = new THREE.Points(particlesGeo, material2);
+
   scene.add(particles);
-  const mesh = new THREE.Mesh(geometry, material2);
+  const mesh = new THREE.Mesh(geometry, material);
   scene.add(mesh);
 
   const clock = new THREE.Clock();
   clock.start();
+
   const animationLoop: FrameRequestCallback = (timestamp) => {
     if (!scene || !camera) return;
 
@@ -241,6 +270,8 @@ onMounted(() => {
 
     updateStuff(elapsedTime);
 
+    controls.update();
+
     renderer.render(scene, camera);
   };
 
@@ -248,7 +279,7 @@ onMounted(() => {
 });
 
 const P_SPREAD = 40;
-const P_MULT = 1;
+const P_MULT = 2;
 
 // Card transform
 

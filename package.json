@@ -11,8 +11,10 @@
   },
   "dependencies": {
     "@nuxtjs/tailwindcss": "^6.12.1",
+    "glsl-tokenizer": "^2.1.5",
     "nuxt": "^3.12.4",
     "three": "^0.167.1",
+    "three-custom-shader-material": "^5.4.0",
     "vue": "latest"
   },
   "devDependencies": {
