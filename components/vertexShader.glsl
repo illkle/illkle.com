@@ -1,15 +1,38 @@
 uniform float uSize;
 uniform float uTime;
 
-attribute float aSize;
+attribute vec2 aSize;
 attribute float aTimeBorn;
 attribute float aTimeWhenDead;
 attribute vec3 aVelocity;
 attribute vec3 aAttractions;
 
-//#define PI 3.14159265359
+#define PI 3.14159265359
 
 varying float vLifePercent;
+varying float vDistance;
+varying vec2 vUv;
+varying vec3 vPosition;
+
+/*
+
+export const lerp = (x: number, y: number, a: number) => x * (1 - a) + y * a;
+export const clamp = (a: number, min = 0, max = 1) => Math.min(max, Math.max(min, a));
+export const invlerp = (x: number, y: number, a: number) => clamp((a - x) / (y - x));
+export const range = (x1: number, y1: number, x2: number, y2: number, a: number) => lerp(x2, y2, invlerp(x1, y1, a));
+*/
+
+float lerp(float x, float y, float a) {
+    return x * (1.0 - a) + y * a;
+}
+
+float invlerp(float x, float y, float a) {
+    return clamp((a - x) / (y - x), 0.0, 1.0);
+}
+
+float range(float x1, float y1, float x2, float y2, float a) {
+    return lerp(x2, y2, invlerp(x1, y1, a));
+}
 
 float cubicOut(float t) {
     float f = t - 1.0;
@@ -21,7 +44,6 @@ float exponentialOut(float t) {
 }
 
 void main() {
-
     float progressTime = uTime - aTimeBorn;
     float willLiveForTime = aTimeWhenDead - aTimeBorn;
     float percentOfLife = progressTime / willLiveForTime;
@@ -35,8 +57,12 @@ void main() {
     vec4 viewPosition = viewMatrix * modelPosition;
     vec4 projectedPosition = projectionMatrix * viewPosition;
 
+    float sizeVal = exponentialOut(range(0.0, 0.25, 0.0, 1.0, percentOfLife)) * (aSize.x + (aSize.y * percentOfLife)) * (1.0 - percentOfLife);
+
     gl_Position = projectedPosition;
-    gl_PointSize = aSize * uSize * (1.0 / -viewPosition.z);
+    gl_PointSize = sizeVal * uSize * (1.0 / -viewPosition.z);
 
     vLifePercent = percentOfLife;
+    vDistance = distance(modifiedPosition.z, 0.0);
+    vPosition = projectedPosition.xyz;
 }

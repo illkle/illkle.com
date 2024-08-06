@@ -1,3 +1,4 @@
 {
-  "typescript.tsserver.experimental.useVsCodeWatcher": false
+  "typescript.tsserver.experimental.useVsCodeWatcher": false,
+  "prettier.printWidth": 120
 }

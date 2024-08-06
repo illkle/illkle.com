@@ -7,9 +7,7 @@ export const useCanvasContext = (
 
   watchEffect(() => {
     if (!canvas.value) return;
-    context.value = canvas.value?.getContext(
-      'webgl2'
-    ) as WebGL2RenderingContext;
+    context.value = canvas.value?.getContext('webgl2') as WebGL2RenderingContext;
   });
 
   watch([context, screenWidth, screenHeight], (upd) => {
@@ -87,38 +85,14 @@ export const useMousePos = () => {
   return { mouseX, mouseY, hasMouse };
 };
 
-export const getRandomNumber = (min: number, max: number) => {
-  return Math.random() * (max - min) + min;
-};
-
-export const getRandomNumber2 = (min: number, max: number) => {
-  return (
-    min +
-    getRandomNumber(0, (max - min) / 2) +
-    getRandomNumber(0, (max - min) / 2)
-  );
-};
-
 export const lerp = (x: number, y: number, a: number) => x * (1 - a) + y * a;
-export const clamp = (a: number, min = 0, max = 1) =>
-  Math.min(max, Math.max(min, a));
-export const invlerp = (x: number, y: number, a: number) =>
-  clamp((a - x) / (y - x));
-export const range = (
-  x1: number,
-  y1: number,
-  x2: number,
-  y2: number,
-  a: number
-) => lerp(x2, y2, invlerp(x1, y1, a));
+export const clamp = (a: number, min = 0, max = 1) => Math.min(max, Math.max(min, a));
+export const invlerp = (x: number, y: number, a: number) => clamp((a - x) / (y - x));
+export const range = (x1: number, y1: number, x2: number, y2: number, a: number) => lerp(x2, y2, invlerp(x1, y1, a));
 
 export type Point = { x: number; y: number };
 
-export const interpolatePoints = (
-  a: Point,
-  b: Point,
-  progress: number
-): Point => {
+export const interpolatePoints = (a: Point, b: Point, progress: number): Point => {
   const x = (a.x - b.x) * progress + b.x;
   const y = (a.y - b.y) * progress + b.y;
 
@@ -130,12 +104,7 @@ export const getDistanceBetweenPoints = (a: Point, b: Point) => {
 };
 
 // Takes shape as 4 coordinates and returns random point on it's perimeter
-export const getRandomPointOnQuadrilateral = (
-  p1: Point,
-  p2: Point,
-  p3: Point,
-  p4: Point
-): Point => {
+export const getRandomPointOnQuadrilateral = (p1: Point, p2: Point, p3: Point, p4: Point): Point => {
   const lines: [Point, Point][] = [
     [p1, p2],
     [p2, p3],

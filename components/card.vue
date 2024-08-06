@@ -4,7 +4,7 @@
       ref="cardRef"
       class="flex z-10 fixed"
       :style="{
-        perspective: '300px',
+        perspective: '900px',
         left: '50%',
         top: `${range(0, 100, 50, 0, FST)}%`,
         transform: `translate(-50%, ${range(0, 100, -50, 0, FST)}%)`,
@@ -39,18 +39,14 @@
       </div>
     </div>
 
-    <div
-      ref="canvasP"
-      class="absolute top-0 overflow-hidden pointer-events-none opacity-100 bg-red-300"
-    ></div>
+    <div ref="canvasP" class="absolute top-0 overflow-hidden pointer-events-none opacity-100 bg-red-300"></div>
   </div>
 </template>
 <script setup lang="ts">
 import * as THREE from 'three';
 import FragmentShader from './fragmentShader.glsl';
 import VertexShader from './vertexShader.glsl';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import CustomShaderMaterial from 'three-custom-shader-material/vanilla';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 const { screenWidth, screenHeight } = useScreenSize();
 const { scroll } = useScroll();
@@ -68,37 +64,28 @@ onMounted(() => {
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(
     75,
-    document.documentElement.clientWidth /
-      document.documentElement.clientHeight,
+    document.documentElement.clientWidth / document.documentElement.clientHeight,
     0.1,
     1000
   );
 
   renderer = new THREE.WebGLRenderer();
 
-  renderer.setSize(
-    document.documentElement.clientWidth,
-    document.documentElement.clientHeight
-  );
+  renderer.setSize(document.documentElement.clientWidth, document.documentElement.clientHeight);
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
   canvasP.value.appendChild(renderer.domElement);
 
   window.addEventListener('resize', () => {
     if (!camera) return;
-    renderer.setSize(
-      document.documentElement.clientWidth,
-      document.documentElement.clientHeight
-    );
-    camera.aspect =
-      document.documentElement.clientWidth /
-      document.documentElement.clientHeight;
+    renderer.setSize(document.documentElement.clientWidth, document.documentElement.clientHeight);
+    camera.aspect = document.documentElement.clientWidth / document.documentElement.clientHeight;
     camera.updateProjectionMatrix();
   });
 
-  const controls = new OrbitControls(camera, document.documentElement);
-
   camera.position.z = 100;
-  controls.update();
+
+  //const controls = new OrbitControls(camera, document.documentElement);
+  //controls.update();
 
   // Geo
 
@@ -106,35 +93,58 @@ onMounted(() => {
 
   const count = 50000;
 
-  const positions = new THREE.BufferAttribute(
-    new Float32Array([...Array(count * 3)].map(() => 0)),
-    3
-  );
-  const sizes = new THREE.BufferAttribute(
-    new Float32Array([...Array(count)].map(() => getRandomNumber(1000, 3000))),
-    1
-  );
-  const ttl = new THREE.BufferAttribute(
-    new Float32Array([...Array(count)].map(() => 0.2)),
-    1
-  );
-  const timeBorn = new THREE.BufferAttribute(
-    new Float32Array([...Array(count)].map(() => 0)),
-    1
-  );
-  const velocities = new THREE.BufferAttribute(
-    new Float32Array([...Array(count * 3)].map(() => getRandomNumber(-50, 50))),
-    3
+  const posAttr = new AttributeGenerator(
+    count,
+    3,
+    ([x, y]: number[]) => [
+      x,
+      y,
+      //  (x - screenWidth.value / 2) * 0.12,
+      //(y - screenHeight.value / 2) * 0.12,
+      0, //getRandomNumber(0, 60),
+    ],
+    [0, 0]
   );
 
-  const attractions = new THREE.BufferAttribute(
-    new Float32Array([...Array(count * 3)].map(() => 0)),
-    3
+  const sizeAttr = new AttributeGenerator(
+    count,
+    2,
+    (makeZero?: boolean) =>
+      makeZero
+        ? [0, 0]
+        : [
+            customRandomness([
+              [0, 100, 0.2],
+              [500, 1000, 0.7],
+              [1000, 4000, 0.9],
+              [4000, 7000, 0.95],
+              [7000, 8000, 1],
+            ]) * 1.5,
+            0,
+          ],
+    true
   );
 
-  particlesGeo.setAttribute('position', positions);
-  particlesGeo.setAttribute('aSize', sizes);
-  particlesGeo.setAttribute('aVelocity', velocities);
+  const ttl = new THREE.BufferAttribute(new Float32Array([...Array(count)].map(() => getRandomNumber(0, 7))), 1);
+  const timeBorn = new THREE.BufferAttribute(new Float32Array([...Array(count)].map(() => 0)), 1);
+
+  const velAttr = new AttributeGenerator(count, 3, () => [
+    customRandomness([
+      [-rotationX.value - P_SPREAD, -rotationX.value + P_SPREAD, 0.9],
+      [-P_SPREAD * 2, P_SPREAD * 2, 1],
+    ]),
+    customRandomness([
+      [-rotationY.value - P_SPREAD, -rotationY.value + P_SPREAD, 0.9],
+      [-P_SPREAD * 2, P_SPREAD * 2, 1],
+    ]),
+    0,
+  ]);
+
+  const attractions = new THREE.BufferAttribute(new Float32Array([...Array(count * 3)].map(() => 0)), 3);
+
+  particlesGeo.setAttribute('position', posAttr.ba);
+  particlesGeo.setAttribute('aSize', sizeAttr.ba);
+  particlesGeo.setAttribute('aVelocity', velAttr.ba);
   particlesGeo.setAttribute('aTimeWhenDead', ttl);
   particlesGeo.setAttribute('aTimeBorn', timeBorn);
   particlesGeo.setAttribute('aAttractions', timeBorn);
@@ -148,7 +158,8 @@ onMounted(() => {
     return Math.ceil((v - Math.floor(v)) / itemTimeCost);
   };
 
-  const updateStuff = (clock: number) => {
+  let updatedThisSecond = 0;
+  const updateStuff = (clock: number, cursorX: number, cursorY: number) => {
     let setUpdate = false;
 
     if (!lastClock) {
@@ -156,40 +167,26 @@ onMounted(() => {
       return;
     }
 
-    const bXv = -rotationX.value;
-    const bYv = -rotationY.value;
-
     let finishAt = getInd(lastClock);
     let toSetAsStart = finishAt;
 
     if (finishAt < startFrom) {
       finishAt = count;
       toSetAsStart = 0;
+      updatedThisSecond = 0;
     }
 
     for (let i = startFrom; i < finishAt; i++) {
       if (ttl.array[i] > clock) continue;
 
       if (!setUpdate) {
-        const tStart = startFrom * 3;
-        const end = finishAt * 3 + 2;
-        const count = end - tStart;
-
-        [positions, velocities, sizes, ttl, timeBorn, attractions].forEach(
-          (v) => {
-            if (v.itemSize === 1) {
-              v.addUpdateRange(startFrom, finishAt - startFrom);
-            } else if (v.itemSize === 3) {
-              v.addUpdateRange(tStart, count);
-            }
-            v.needsUpdate = true;
-          }
-        );
-
+        [posAttr.ba, sizeAttr.ba, velAttr.ba, ttl, timeBorn, attractions].forEach((v) => {
+          v.needsUpdate = true;
+        });
         setUpdate = true;
       }
 
-      const to = i * 3;
+      updatedThisSecond++;
 
       const { x, y } = getRandomPointOnQuadrilateral(
         cardPoints.value.tl,
@@ -197,27 +194,9 @@ onMounted(() => {
         cardPoints.value.br,
         cardPoints.value.bl
       );
-
-      positions.array[to] = (x - screenWidth.value / 2) * 0.12;
-      positions.array[to + 1] = (y - screenHeight.value / 2) * 0.12;
-      positions.array[to + 2] = 0;
-
-      velocities.array[to] =
-        getRandomNumber(bXv - P_SPREAD, bXv + P_SPREAD) * P_MULT;
-      velocities.array[to + 1] =
-        getRandomNumber(bYv - P_SPREAD, bYv + P_SPREAD) * P_MULT;
-      velocities.array[to + 2] = 0;
-
-      sizes.array[i] = Math.max(
-        0,
-        Math.random() > 0.98
-          ? getRandomNumber2(-5000, 5000)
-          : getRandomNumber2(-500, 500)
-      );
-
-      attractions.array[to] = getRandomNumber(-1, 1);
-      attractions.array[to + 1] = getRandomNumber(-1, 1);
-      attractions.array[to + 2] = 1000;
+      posAttr.updateIndex(i, [cursorX, cursorY]);
+      velAttr.updateIndex(i);
+      sizeAttr.updateIndex(i);
 
       ttl.array[i] = clock + getRandomNumber(3, 7);
       timeBorn.array[i] = clock;
@@ -230,36 +209,44 @@ onMounted(() => {
   const material2 = new THREE.ShaderMaterial({
     vertexShader: VertexShader,
     fragmentShader: FragmentShader,
-    blending: THREE.AdditiveBlending,
+    transparent: true,
     vertexColors: true,
     depthWrite: false,
     uniforms: {
       uSize: { value: renderer.getPixelRatio() },
       uTime: { value: 0 },
+      uLightPos: { value: new THREE.Vector2(0, 50) },
     },
   });
-  const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-
-  const geometry = new THREE.BoxGeometry(10, 10, 32, 32);
-
-  const material3 = new CustomShaderMaterial({
-    baseMaterial: material,
-    vertexShader: VertexShader,
-    fragmentShader: FragmentShader,
-    uniforms: {
-      uSize: { value: renderer.getPixelRatio() },
-      uTime: { value: 0 },
-    },
-  });
-
   const particles = new THREE.Points(particlesGeo, material2);
-
   scene.add(particles);
-  const mesh = new THREE.Mesh(geometry, material);
-  scene.add(mesh);
+
+  const material = new THREE.MeshBasicMaterial({
+    color: new THREE.Color(255, 255, 0),
+    opacity: 0,
+    transparent: true,
+    side: THREE.DoubleSide,
+  });
+
+  const hiddenPlay = new THREE.PlaneGeometry(1000, 1000, 1, 1);
+  const hP = new THREE.Mesh(hiddenPlay, material);
+  // hP.translateZ(-100);
+  scene.add(hP);
+
+  // scene.background = new THREE.Color(0.2, 0.2, 0.2);
 
   const clock = new THREE.Clock();
   clock.start();
+
+  const raycaster = new THREE.Raycaster();
+  const thePlane = new THREE.Plane(new THREE.Vector3(0, 0, 1));
+  const pointer = new THREE.Vector2();
+
+  function onPointerMove(event: any) {
+    pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+    pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  }
+  addEventListener('mousemove', onPointerMove);
 
   const animationLoop: FrameRequestCallback = (timestamp) => {
     if (!scene || !camera) return;
@@ -268,9 +255,11 @@ onMounted(() => {
     // Update material
     material2.uniforms.uTime.value = elapsedTime;
 
-    updateStuff(elapsedTime);
+    raycaster.setFromCamera(pointer, camera);
+    const res = new THREE.Vector3();
+    raycaster.ray.intersectPlane(thePlane, res);
 
-    controls.update();
+    updateStuff(elapsedTime, res.x, res.y);
 
     renderer.render(scene, camera);
   };
@@ -278,8 +267,8 @@ onMounted(() => {
   renderer.setAnimationLoop(animationLoop);
 });
 
-const P_SPREAD = 40;
-const P_MULT = 2;
+const P_SPREAD = 30;
+const P_MULT = 1.5;
 
 // Card transform
 
@@ -289,17 +278,11 @@ const flipped = ref(false);
 
 const { mouseX, mouseY, hasMouse } = useMousePos();
 
-const mousePercentX = computed(() =>
-  hasMouse.value ? range(0, screenWidth.value, 0, 100, mouseX.value) : 50
-);
-const mousePercentY = computed(() =>
-  hasMouse.value ? range(0, screenHeight.value, 0, 100, mouseY.value) : 50
-);
+const mousePercentX = computed(() => (hasMouse.value ? range(0, screenWidth.value, 0, 100, mouseX.value) : 50));
+const mousePercentY = computed(() => (hasMouse.value ? range(0, screenHeight.value, 0, 100, mouseY.value) : 50));
 
 const mouseDistance = computed(() =>
-  hasMouse.value
-    ? Math.abs(mousePercentX.value - 50) + Math.abs(mousePercentY.value - 50)
-    : 0
+  hasMouse.value ? Math.abs(mousePercentX.value - 50) + Math.abs(mousePercentY.value - 50) : 0
 );
 
 const rotationX = computed(() => {
@@ -349,107 +332,4 @@ onMounted(() => {
   addEventListener('mousemove', updateCardPoint);
   addEventListener('scroll', updateCardPoint);
 });
-
-// Particles
-let particles: Particle[] = [];
-
-type Particle = {
-  x: number;
-  y: number;
-  velX: number;
-  velY: number;
-  ttl: number;
-  size: number;
-};
-
-const drawLight = (ctx: CanvasRenderingContext2D) => {
-  const fromMouseToCard = [
-    cardPoints.value.tl,
-    cardPoints.value.tr,
-    cardPoints.value.br,
-    cardPoints.value.bl,
-  ].map((v) => {
-    return { from: { x: mouseX.value, y: mouseY.value }, to: v };
-  });
-
-  const lFactor = 4;
-  const toDraw = fromMouseToCard.map((a) => {
-    const mX = a.to.x - a.from.x;
-    const mY = a.to.y - a.from.y;
-
-    return {
-      from: a.to,
-      to: { x: a.to.x + mX * lFactor, y: a.to.y + mY * lFactor },
-    };
-  });
-
-  for (let i = 0; i < toDraw.length; i++) {
-    const a = toDraw[i === 0 ? toDraw.length - 1 : i - 1];
-    const b = toDraw[i];
-    ctx.beginPath();
-    ctx.moveTo(a.from.x, a.from.y);
-
-    ctx.lineTo(a.to.x, a.to.y);
-    ctx.lineTo(b.to.x, b.to.y);
-    ctx.lineTo(b.from.x, b.from.y);
-    ctx.moveTo(a.from.x, a.from.y);
-
-    ctx.strokeStyle = 'rgb(50,50,50)';
-    ctx.stroke();
-  }
-};
-
-const PPS = ref(300);
-
-const generateParticles = (secFromLast: number) => {
-  const rawCount =
-    secFromLast * range(0, 100, 25, PPS.value, mouseDistance.value);
-
-  const count =
-    rawCount > 1 ? Math.ceil(rawCount) : Math.random() < rawCount ? 1 : 0;
-
-  const bXv = -rotationX.value;
-  const bYv = rotationY.value;
-
-  for (let i = 0; i < count; i++) {
-    const { x, y } = getRandomPointOnQuadrilateral(
-      cardPoints.value.tl,
-      cardPoints.value.tr,
-      cardPoints.value.br,
-      cardPoints.value.bl
-    );
-    particles.push({
-      x,
-      y,
-      velX: getRandomNumber(bXv - P_SPREAD, bXv + P_SPREAD) * P_MULT,
-      velY: getRandomNumber(bYv - P_SPREAD, bYv + P_SPREAD) * P_MULT,
-      ttl: 100,
-      size:
-        Math.random() > 0.9 ? getRandomNumber(5, 15) : getRandomNumber(1, 5),
-    });
-  }
-};
-
-const SAFE_ZONE_SIZE = 30;
-
-const simulateParticles = (secFromLast: number) => {
-  particles = particles.reduce((arr, el) => {
-    el.ttl = el.ttl - secFromLast;
-    if (el.ttl < 0) return arr;
-
-    el.x = el.x + el.velX * secFromLast;
-    el.y = el.y + el.velY * secFromLast;
-
-    if (
-      el.x < -SAFE_ZONE_SIZE ||
-      el.x > screenWidth.value + SAFE_ZONE_SIZE ||
-      el.y < -SAFE_ZONE_SIZE ||
-      el.y > screenHeight.value + SAFE_ZONE_SIZE
-    ) {
-      return arr;
-    }
-    arr.push(el);
-    return arr;
-  }, [] as Particle[]);
-};
 </script>
