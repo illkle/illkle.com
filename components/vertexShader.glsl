@@ -13,6 +13,7 @@ varying float vLifePercent;
 varying float vDistance;
 varying vec2 vUv;
 varying vec3 vPosition;
+varying float vAliveness;
 
 /*
 
@@ -62,6 +63,7 @@ void main() {
     gl_Position = projectedPosition;
     gl_PointSize = sizeVal * uSize * (1.0 / -viewPosition.z);
 
+    vAliveness = step(0.0, progressTime);
     vLifePercent = percentOfLife;
     vDistance = distance(modifiedPosition.z, 0.0);
     vPosition = projectedPosition.xyz;

@@ -4,6 +4,8 @@ uniform vec2 uLightPos;
 varying float vLifePercent;
 varying vec3 vPosition;
 
+varying float vAliveness;
+
 #define PI 3.141592
 #define PI_2 6.283185
 
@@ -15,9 +17,9 @@ void main() {
     vec4 backShadow = vec4(vec3(0.0), (1.0 - shadowStren - 0.5));
 
     float distanceFromLight = distance(vPosition.xy, uLightPos);
-    float lightness = 1.0 - distanceFromLight / 750.0;
+    float lightness = 1.0 - distanceFromLight / 400.0;
 
-    vec4 mainParticle = vec4(vec3(lightness), strength2);
+    vec4 mainParticle = vec4(vec3(lightness), strength2) * vAliveness;
 
     // Making shadow mask to fake lighting
     // Angle in particle
