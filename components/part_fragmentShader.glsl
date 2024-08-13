@@ -22,10 +22,10 @@ void main() {
     vec4 mainParticle = vec4(vec3(lightness), strength2) * vAliveness;
 
     // Making shadow mask to fake lighting
-    // Angle in particle
+    // Angle in particle(current pixel relative to center of particle)
     float pixelInTexture = atan(gl_PointCoord.y - 0.5, gl_PointCoord.x - 0.5);
     float pixelInTextureMod = mod(0.0 - pixelInTexture, PI_2) / PI_2;
-    // Angle on screen
+    // Angle on screen(current particle relative to center of screen)
     float pointInGlobal = atan(vPosition.y - uLightPos.y, vPosition.x - uLightPos.x);
     float pointInglobalMod = 1.0 - mod(0.0 - pointInGlobal, PI_2) / PI_2;
 

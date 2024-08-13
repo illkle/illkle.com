@@ -1,5 +1,5 @@
 <template>
-  <div class="">
+  <div class="bg-neutral-900">
     <div class="h-screen">
       <Card />
     </div>

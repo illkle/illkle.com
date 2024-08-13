@@ -9,9 +9,12 @@
 </template>
 
 <script setup lang="ts">
+import FragPosition from './sim_fragPosition.glsl';
+import FragVelocity from './sim_fragVelocity.glsl';
 import * as THREE from 'three';
-import FragmentShader from './fragmentShader.glsl';
-import VertexShader from './vertexShader.glsl';
+import FragmentShader from './part_fragmentShader.glsl';
+import VertexShader from './part_vertexShader.glsl';
+import { GPUComputationRenderer } from 'three/examples/jsm/Addons.js';
 
 const { screenWidth, screenHeight } = useScreenSize();
 const { scroll } = useScroll();
@@ -60,18 +63,35 @@ onMounted(() => {
 
   const count = 100000;
 
-  const posAttr = new AttributeGenerator(
-    count,
-    3,
-    ([x, y]: number[]) => [
-      x,
-      y,
-      //  (x - screenWidth.value / 2) * 0.12,
-      //(y - screenHeight.value / 2) * 0.12,
-      0, //getRandomNumber(0, 60),
-    ],
-    [0, 0]
-  );
+  const texSize = Math.ceil(Math.sqrt(count));
+
+  const gpuCompute = new GPUComputationRenderer(texSize, texSize, renderer);
+
+  const dtPosition = gpuCompute.createTexture();
+  const dtVelocity = gpuCompute.createTexture();
+
+  const velocityVariable = gpuCompute.addVariable('textureVelocity', FragVelocity, dtVelocity);
+  const positionVariable = gpuCompute.addVariable('texturePosition', FragPosition, dtPosition);
+
+  gpuCompute.setVariableDependencies(velocityVariable, [positionVariable, velocityVariable]);
+  gpuCompute.setVariableDependencies(positionVariable, [positionVariable, velocityVariable]);
+
+  const positionUniforms = positionVariable.material.uniforms;
+  const velocityUniforms = velocityVariable.material.uniforms;
+
+  positionUniforms['time'] = { value: 0.0 };
+  positionUniforms['delta'] = { value: 0.0 };
+  velocityUniforms['time'] = { value: 1.0 };
+  velocityUniforms['delta'] = { value: 0.0 };
+
+  velocityVariable.wrapS = THREE.RepeatWrapping;
+  velocityVariable.wrapT = THREE.RepeatWrapping;
+  positionVariable.wrapS = THREE.RepeatWrapping;
+  positionVariable.wrapT = THREE.RepeatWrapping;
+
+  gpuCompute.init();
+
+  const posAttr = new AttributeGenerator(count, 3, ([x, y]: number[]) => [x, y, 0], [0, 0]);
 
   const sizeAttr = new AttributeGenerator(
     count,
@@ -86,7 +106,7 @@ onMounted(() => {
               [1000, 4000, 0.9],
               [4000, 7000, 0.95],
               [7000, 8000, 1],
-            ]) * 1.5,
+            ]),
             0,
           ],
     true
@@ -95,26 +115,17 @@ onMounted(() => {
   const ttl = new THREE.BufferAttribute(new Float32Array([...Array(count)].map(() => 0)), 1);
   const timeBorn = new THREE.BufferAttribute(new Float32Array([...Array(count)].map(() => 0)), 1);
 
-  const velAttr = new AttributeGenerator(count, 3, () => [
-    customRandomness([
-      [-P_SPREAD, P_SPREAD, 0.9],
-      [-P_SPREAD * 2, P_SPREAD * 2, 1],
-    ]) * P_MULT,
-    customRandomness([
-      [-P_SPREAD, +P_SPREAD, 0.9],
-      [-P_SPREAD * 2, P_SPREAD * 2, 1],
-    ]) * P_MULT,
-    0,
-  ]);
+  const velAttr = new AttributeGenerator(count, 3, () => [0, 0, 0]);
 
-  const attractions = new THREE.BufferAttribute(new Float32Array([...Array(count * 3)].map(() => 0)), 3);
+  // Offset, scale, dist
+  const attractions = new AttributeGenerator(count, 3, () => [15, 10, 10]);
 
   particlesGeo.setAttribute('position', posAttr.ba);
   particlesGeo.setAttribute('aSize', sizeAttr.ba);
   particlesGeo.setAttribute('aVelocity', velAttr.ba);
   particlesGeo.setAttribute('aTimeWhenDead', ttl);
   particlesGeo.setAttribute('aTimeBorn', timeBorn);
-  particlesGeo.setAttribute('aAttractions', timeBorn);
+  particlesGeo.setAttribute('aAttractions', attractions.ba);
 
   let startFrom = 0;
   let lastClock: number | null = null;
@@ -156,7 +167,7 @@ onMounted(() => {
 
       spawned++;
       if (!setUpdate) {
-        [posAttr.ba, sizeAttr.ba, velAttr.ba, ttl, timeBorn, attractions].forEach((v) => {
+        [posAttr.ba, sizeAttr.ba, velAttr.ba, ttl, timeBorn, attractions.ba].forEach((v) => {
           v.needsUpdate = true;
         });
         setUpdate = true;
@@ -182,19 +193,40 @@ onMounted(() => {
     lastClock = clock;
   };
 
-  const material2 = new THREE.ShaderMaterial({
+  const particleMaterial = new THREE.ShaderMaterial({
     vertexShader: VertexShader,
     fragmentShader: FragmentShader,
     transparent: true,
     vertexColors: true,
+
     depthWrite: false,
     uniforms: {
+      uTexture: {
+        value: new THREE.TextureLoader().load('_nuxt/public/textTest.jpg'),
+      },
+      uTextureX: {
+        value: new THREE.Vector2(-100, 100),
+      },
+      uTextureY: {
+        value: new THREE.Vector2(-100, 100),
+      },
+      uScreenSize: {
+        value: renderer.getSize(new THREE.Vector2()),
+      },
       uSize: { value: renderer.getPixelRatio() },
       uTime: { value: 0 },
       uLightPos: { value: new THREE.Vector2(0, 50) },
+
+      uPosition: {
+        value: gpuCompute.getCurrentRenderTarget(positionVariable).texture,
+      },
+      uVelocity: {
+        value: gpuCompute.getCurrentRenderTarget(velocityVariable).texture,
+      },
     },
   });
-  const particles = new THREE.Points(particlesGeo, material2);
+
+  const particles = new THREE.Points(particlesGeo, particleMaterial);
   scene.add(particles);
 
   const material = new THREE.MeshBasicMaterial({
@@ -224,18 +256,30 @@ onMounted(() => {
   }
   addEventListener('mousemove', onPointerMove);
 
+  let lastTs = 0;
+
   const animationLoop: FrameRequestCallback = (timestamp) => {
     if (!scene || !camera) return;
 
     const elapsedTime = clock.getElapsedTime();
-    // Update material
-    material2.uniforms.uTime.value = elapsedTime;
+    const delta = clock.getDelta();
+
+    positionUniforms['time'].value = elapsedTime;
+    positionUniforms['delta'].value = delta;
+    velocityUniforms['time'].value = elapsedTime;
+    velocityUniforms['delta'].value = delta;
+
+    particleMaterial.uniforms.uTime.value = elapsedTime;
 
     raycaster.setFromCamera(pointer, camera);
     const res = new THREE.Vector3();
     raycaster.ray.intersectPlane(thePlane, res);
 
     updateStuff(elapsedTime, res.x, res.y);
+    gpuCompute.compute();
+
+    particleMaterial.uniforms.uPosition.value = gpuCompute.getCurrentRenderTarget(positionVariable).texture;
+    particleMaterial.uniforms.uVelocity.value = gpuCompute.getCurrentRenderTarget(velocityVariable).texture;
 
     renderer.render(scene, camera);
   };

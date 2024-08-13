@@ -8,6 +8,9 @@ dependencies:
   '@nuxtjs/tailwindcss':
     specifier: ^6.12.1
     version: 6.12.1
+  gpucomputationrender-three:
+    specifier: ^2.0.0
+    version: 2.0.0(three@0.167.1)
   nuxt:
     specifier: ^3.12.4
     version: 3.12.4(vite@5.3.5)
@@ -3481,6 +3484,14 @@ packages:
       path-type: 5.0.0
       slash: 5.1.0
       unicorn-magic: 0.1.0
+    dev: false
+
+  /gpucomputationrender-three@2.0.0(three@0.167.1):
+    resolution: {integrity: sha512-GK+0QfBl3Qu/7pscQnQugvGprpeZ9n1PsHZBMTcIXKK5graazfHPInKnODiD3dY0+8ahNHV0PksEjbTm+0fHkQ==}
+    peerDependencies:
+      three: '>=0.94.0'
+    dependencies:
+      three: 0.167.1
     dev: false
 
   /graceful-fs@4.2.11:
