@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-type gFunc<T> = (args: T) => number[];
+type gFunc<T> = (args: T, index?: number) => number[];
 
 export class AttributeGenerator<T> {
   ba: THREE.BufferAttribute;
@@ -17,7 +17,7 @@ export class AttributeGenerator<T> {
     const a = this.ba.array;
     const real = index * this.dimensions;
 
-    const res = this.generator(args);
+    const res = this.generator(args, index);
     for (let o = 0; o < this.dimensions; o++) {
       a[real + o] = res[o];
     }

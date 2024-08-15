@@ -6,6 +6,8 @@ varying vec3 vPosition;
 
 varying float vAliveness;
 
+varying vec3 vVelocity;
+
 #define PI 3.141592
 #define PI_2 6.283185
 
@@ -19,7 +21,8 @@ void main() {
     float distanceFromLight = distance(vPosition.xy, uLightPos);
     float lightness = 1.0 - distanceFromLight / 400.0;
 
-    vec4 mainParticle = vec4(vec3(lightness), strength2) * vAliveness;
+    vec3 particleColor = vec3(lightness);
+    vec4 mainParticle = vec4(particleColor, strength2) * vAliveness;
 
     // Making shadow mask to fake lighting
     // Angle in particle(current pixel relative to center of particle)
@@ -39,6 +42,6 @@ void main() {
 
     vec4 maskedShadow = mix(vec4(0.0) + backShadow * 0.4, backShadow, lightConeA + lightConeB);
 
-   // gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+    //gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
     gl_FragColor = maskedShadow * 1.25 + mainParticle * strength2;
 }

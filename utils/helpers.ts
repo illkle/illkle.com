@@ -1,3 +1,5 @@
+import * as THREE from 'three';
+
 export const useCanvasContext = (
   canvas: Ref<HTMLCanvasElement | null>,
   screenWidth: Ref<number>,
@@ -134,4 +136,20 @@ export const getRandomPointOnQuadrilateral = (p1: Point, p2: Point, p3: Point, p
   // This should never happen
   console.error('getRandomPointOnQuadrilateral returning fallback value');
   return p1;
+};
+
+export const fillTexture = (
+  texture: THREE.DataTexture,
+  generator: (numberOfPixel: number) => [number, number, number, number]
+) => {
+  const theArray = texture.image.data;
+
+  for (let k = 0, kl = theArray.length; k < kl; k += 4) {
+    const [x, y, z, w] = generator(k / 4);
+
+    theArray[k + 0] = x;
+    theArray[k + 1] = y;
+    theArray[k + 2] = z;
+    theArray[k + 3] = w;
+  }
 };

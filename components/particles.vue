@@ -9,8 +9,10 @@
 </template>
 
 <script setup lang="ts">
+import FragInfo from './sim_fragInfo.glsl';
 import FragPosition from './sim_fragPosition.glsl';
 import FragVelocity from './sim_fragVelocity.glsl';
+import FragRandom from './sim_fragRandom.glsl';
 import * as THREE from 'three';
 import FragmentShader from './part_fragmentShader.glsl';
 import VertexShader from './part_vertexShader.glsl';
@@ -61,137 +63,100 @@ onMounted(() => {
 
   const particlesGeo = new THREE.BufferGeometry();
 
-  const count = 100000;
+  const count = 50000;
+  const PPS = count / 10;
 
   const texSize = Math.ceil(Math.sqrt(count));
 
   const gpuCompute = new GPUComputationRenderer(texSize, texSize, renderer);
 
+  // To simulate particles on a gpu data is stored in textures.
+  // Each texture is vec4 with the folowing vals
+  // dtRandom — random static seed for each particle random generation x3, particle size
+  // dtVelocity — xyz velocities
+  // dtInfo  — timeBorn, timeDead, isFreshSpawn
+  // dtPositon — xyz position, blank
+
+  const dtRandom = gpuCompute.createTexture();
   const dtPosition = gpuCompute.createTexture();
   const dtVelocity = gpuCompute.createTexture();
+  const dtInfo = gpuCompute.createTexture();
 
+  fillTexture(dtRandom, () => [
+    Math.random(),
+    Math.random(),
+    0,
+    customRandomness([
+      [0, 100, 0.2],
+      [500, 1000, 0.7],
+      [1000, 4000, 0.9],
+      [4000, 7000, 0.95],
+      [7000, 8000, 1],
+    ]),
+  ]);
+  fillTexture(dtInfo, (index) => {
+    return [0, index / PPS, 1, 0];
+  });
+
+  const randomVariable = gpuCompute.addVariable('textureRandom', FragRandom, dtRandom);
   const velocityVariable = gpuCompute.addVariable('textureVelocity', FragVelocity, dtVelocity);
   const positionVariable = gpuCompute.addVariable('texturePosition', FragPosition, dtPosition);
+  const infoVariable = gpuCompute.addVariable('textureInfo', FragInfo, dtInfo);
 
-  gpuCompute.setVariableDependencies(velocityVariable, [positionVariable, velocityVariable]);
-  gpuCompute.setVariableDependencies(positionVariable, [positionVariable, velocityVariable]);
+  gpuCompute.setVariableDependencies(randomVariable, [randomVariable]);
+  gpuCompute.setVariableDependencies(velocityVariable, [
+    randomVariable,
+    positionVariable,
+    velocityVariable,
+    infoVariable,
+  ]);
+  gpuCompute.setVariableDependencies(infoVariable, [infoVariable, randomVariable]);
+  gpuCompute.setVariableDependencies(positionVariable, [
+    positionVariable,
+    velocityVariable,
+    randomVariable,
+    infoVariable,
+  ]);
 
-  const positionUniforms = positionVariable.material.uniforms;
-  const velocityUniforms = velocityVariable.material.uniforms;
+  const vars = [randomVariable, velocityVariable, positionVariable, infoVariable];
 
-  positionUniforms['time'] = { value: 0.0 };
-  positionUniforms['delta'] = { value: 0.0 };
-  velocityUniforms['time'] = { value: 1.0 };
-  velocityUniforms['delta'] = { value: 0.0 };
+  vars.forEach((v) => {
+    v.material.defines.BOUNDS = texSize.toFixed(2);
 
-  velocityVariable.wrapS = THREE.RepeatWrapping;
-  velocityVariable.wrapT = THREE.RepeatWrapping;
-  positionVariable.wrapS = THREE.RepeatWrapping;
-  positionVariable.wrapT = THREE.RepeatWrapping;
+    v.wrapS = THREE.RepeatWrapping;
+    v.wrapT = THREE.RepeatWrapping;
+  });
+
+  const updateComputeUniforms = (time: number, delta: number, cursor: THREE.Vector2) => {
+    vars.forEach((v) => {
+      const uni = v.material.uniforms;
+      uni['time'] = { value: time };
+      uni['delta'] = { value: delta };
+      uni['cursor'] = { value: cursor };
+    });
+  };
+
+  updateComputeUniforms(0.0, 0.0, new THREE.Vector2(0, 0));
 
   gpuCompute.init();
 
-  const posAttr = new AttributeGenerator(count, 3, ([x, y]: number[]) => [x, y, 0], [0, 0]);
-
-  const sizeAttr = new AttributeGenerator(
+  const indexAttr = new AttributeGenerator(
     count,
     2,
-    (makeZero?: boolean) =>
-      makeZero
-        ? [0, 0]
-        : [
-            customRandomness([
-              [0, 100, 0.2],
-              [500, 1000, 0.7],
-              [1000, 4000, 0.9],
-              [4000, 7000, 0.95],
-              [7000, 8000, 1],
-            ]),
-            0,
-          ],
-    true
+    (_, i) => {
+      if (!i) return [0, 0];
+      const y = Math.floor(i / texSize);
+      const x = i % texSize;
+
+      return [x / texSize, y / texSize];
+    },
+    undefined
   );
 
-  const ttl = new THREE.BufferAttribute(new Float32Array([...Array(count)].map(() => 0)), 1);
-  const timeBorn = new THREE.BufferAttribute(new Float32Array([...Array(count)].map(() => 0)), 1);
-
-  const velAttr = new AttributeGenerator(count, 3, () => [0, 0, 0]);
-
-  // Offset, scale, dist
-  const attractions = new AttributeGenerator(count, 3, () => [15, 10, 10]);
+  const posAttr = new AttributeGenerator(count, 3, () => [0, 0, 0]);
 
   particlesGeo.setAttribute('position', posAttr.ba);
-  particlesGeo.setAttribute('aSize', sizeAttr.ba);
-  particlesGeo.setAttribute('aVelocity', velAttr.ba);
-  particlesGeo.setAttribute('aTimeWhenDead', ttl);
-  particlesGeo.setAttribute('aTimeBorn', timeBorn);
-  particlesGeo.setAttribute('aAttractions', attractions.ba);
-
-  let startFrom = 0;
-  let lastClock: number | null = null;
-
-  const itemTimeCost = 1 / count;
-
-  const getInd = (v: number) => {
-    return Math.ceil((v - Math.floor(v)) / itemTimeCost);
-  };
-
-  const updateStuff = (clock: number, cursorX: number, cursorY: number) => {
-    let setUpdate = false;
-
-    if (!lastClock) {
-      lastClock = clock;
-      return;
-    }
-
-    let finishAt = getInd(lastClock);
-    let toSetAsStart = finishAt;
-
-    if (finishAt < startFrom) {
-      finishAt = count;
-      toSetAsStart = 0;
-    }
-
-    const percentOfSecond = (finishAt - startFrom) / count;
-    const allowedToSpawn = spawnCap.value * percentOfSecond;
-    let spawned = 0;
-
-    if (allowedToSpawn < 1) {
-      if (Math.random() > allowedToSpawn) {
-        return;
-      }
-    }
-
-    for (let i = startFrom; i < finishAt && spawned < allowedToSpawn; i++) {
-      if (ttl.array[i] > clock) continue;
-
-      spawned++;
-      if (!setUpdate) {
-        [posAttr.ba, sizeAttr.ba, velAttr.ba, ttl, timeBorn, attractions.ba].forEach((v) => {
-          v.needsUpdate = true;
-        });
-        setUpdate = true;
-      }
-
-      /*
-      const { x, y } = getRandomPointOnQuadrilateral(
-        cardPoints.value.tl,
-        cardPoints.value.tr,
-        cardPoints.value.br,
-        cardPoints.value.bl
-      );
-      */
-      posAttr.updateIndex(i, [cursorX - (camera?.position.y || 0), cursorY - (camera?.position.y || 0)]);
-      velAttr.updateIndex(i);
-      sizeAttr.updateIndex(i);
-
-      ttl.array[i] = clock + getRandomNumber(3, 7);
-      timeBorn.array[i] = clock;
-    }
-
-    startFrom = toSetAsStart;
-    lastClock = clock;
-  };
+  particlesGeo.setAttribute('aTarget', indexAttr.ba);
 
   const particleMaterial = new THREE.ShaderMaterial({
     vertexShader: VertexShader,
@@ -201,14 +166,8 @@ onMounted(() => {
 
     depthWrite: false,
     uniforms: {
-      uTexture: {
-        value: new THREE.TextureLoader().load('_nuxt/public/textTest.jpg'),
-      },
-      uTextureX: {
-        value: new THREE.Vector2(-100, 100),
-      },
-      uTextureY: {
-        value: new THREE.Vector2(-100, 100),
+      uCursor: {
+        value: new THREE.Vector2(),
       },
       uScreenSize: {
         value: renderer.getSize(new THREE.Vector2()),
@@ -222,6 +181,12 @@ onMounted(() => {
       },
       uVelocity: {
         value: gpuCompute.getCurrentRenderTarget(velocityVariable).texture,
+      },
+      uInfo: {
+        value: gpuCompute.getCurrentRenderTarget(infoVariable).texture,
+      },
+      uRandom: {
+        value: gpuCompute.getCurrentRenderTarget(randomVariable).texture,
       },
     },
   });
@@ -238,10 +203,8 @@ onMounted(() => {
 
   const hiddenPlay = new THREE.PlaneGeometry(1000, 1000, 1, 1);
   const hP = new THREE.Mesh(hiddenPlay, material);
-  // hP.translateZ(-100);
-  scene.add(hP);
 
-  // scene.background = new THREE.Color(0.2, 0.2, 0.2);
+  scene.add(hP);
 
   const clock = new THREE.Clock();
   clock.start();
@@ -262,31 +225,27 @@ onMounted(() => {
     if (!scene || !camera) return;
 
     const elapsedTime = clock.getElapsedTime();
-    const delta = clock.getDelta();
-
-    positionUniforms['time'].value = elapsedTime;
-    positionUniforms['delta'].value = delta;
-    velocityUniforms['time'].value = elapsedTime;
-    velocityUniforms['delta'].value = delta;
-
-    particleMaterial.uniforms.uTime.value = elapsedTime;
+    const delta = elapsedTime - lastTs;
+    lastTs = elapsedTime;
 
     raycaster.setFromCamera(pointer, camera);
     const res = new THREE.Vector3();
     raycaster.ray.intersectPlane(thePlane, res);
 
-    updateStuff(elapsedTime, res.x, res.y);
+    updateComputeUniforms(elapsedTime, delta, new THREE.Vector2(res.x, res.y));
+
     gpuCompute.compute();
 
+    particleMaterial.uniforms.uCursor.value = pointer;
+    particleMaterial.uniforms.uTime.value = elapsedTime;
     particleMaterial.uniforms.uPosition.value = gpuCompute.getCurrentRenderTarget(positionVariable).texture;
     particleMaterial.uniforms.uVelocity.value = gpuCompute.getCurrentRenderTarget(velocityVariable).texture;
+    particleMaterial.uniforms.uInfo.value = gpuCompute.getCurrentRenderTarget(infoVariable).texture;
+    particleMaterial.uniforms.uRandom.value = gpuCompute.getCurrentRenderTarget(randomVariable).texture;
 
     renderer.render(scene, camera);
   };
 
   renderer.setAnimationLoop(animationLoop);
 });
-
-const P_SPREAD = 30;
-const P_MULT = 1.5;
 </script>
