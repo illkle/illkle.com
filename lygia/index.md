@@ -1,1 +1,0 @@
-These are shaders I copied from https://lygia.xyz/ repository

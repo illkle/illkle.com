@@ -20,7 +20,7 @@ const float height = resolution.y;
 const float PI = 3.141592653589793;
 const float PI_2 = PI * 2.0;
 
-#include "/lygiaR/generative/fbm.glsl"
+#include "/node_modules/lygia/generative/fbm.glsl"
 
 #define TIME_MULTIPLIER 0.3
 #define SCALE_MULTIPLER 1.0
