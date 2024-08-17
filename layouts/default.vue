@@ -7,7 +7,7 @@
 <script setup>
 useHead({
   bodyAttrs: {
-    class: 'bg-black text-neutral-50',
+    class: 'bg-neutral-950 text-neutral-50',
   },
 });
 </script>

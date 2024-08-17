@@ -12,7 +12,9 @@
   "dependencies": {
     "@nuxtjs/tailwindcss": "^6.12.1",
     "animejs": "^3.2.2",
+    "class-variance-authority": "^0.7.0",
     "nuxt": "^3.12.4",
+    "tailwind-merge": "^2.5.2",
     "three": "^0.167.1",
     "vue": "latest"
   },
