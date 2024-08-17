@@ -1,11 +1,14 @@
 <template>
-  <div
-    @mousedown="() => (spawnCap = 20000)"
-    @mouseup="() => (spawnCap = 10)"
-    @mouseleave="() => (spawnCap = 10)"
-    ref="canvasP"
-    class="absolute top-0 overflow-hidden opacity-100 bg-red-300"
-  ></div>
+  <div class="absolute top-0 left-0 z-20 flex opacity flex-col">
+    <div v-for="(el, i) in controls">
+      <input v-model.number="controls[i]" type="number" class="w-20 bg-neutral-950 text-center" />
+      {{ i }}
+    </div>
+  </div>
+  <div class="opacity-0 absolute top-1/2 left-[80px] flex items-center justify-center z-10 -translate-y-1/2">
+    <h2 class="text-[128px] font-black">ZE KEL</h2>
+  </div>
+  <div ref="canvasP" class="absolute top-0 overflow-hidden opacity-100"></div>
 </template>
 
 <script setup lang="ts">
@@ -29,7 +32,46 @@ let renderer: THREE.WebGLRenderer;
 let scene: THREE.Scene | null;
 let camera: THREE.PerspectiveCamera | null;
 
-const spawnCap = ref(10);
+const controls = ref({
+  uBaseMult: 0.1,
+  uBaseTimeScale: 1,
+  uVelPositionScale: 0.05,
+  uVelRandomScale: 1,
+  uVelTimeScale: 0.25,
+  uVelMult: 2,
+  uNoiseScale: 1,
+  uSizeMod: 1,
+  uLightPosX: 0,
+  uLightPosY: 0,
+  uLightPower: 50,
+  uShadowRound: 0.01,
+  uShadowDirectional: 0.5,
+});
+
+const canSave = ref(false);
+
+onMounted(() => {
+  const res = localStorage.getItem('particleSimControls');
+
+  if (res) {
+    const parsed = JSON.parse(res);
+
+    if (typeof parsed === 'object') {
+      Object.keys(controls.value).forEach((k) => {
+        if (parsed[k] && !Number.isNaN(Number(parsed[k]))) {
+          // @ts-ignore
+          controls.value[k] = Number(parsed[k]);
+        }
+      });
+    }
+  }
+  canSave.value = true;
+});
+
+watchEffect(() => {
+  if (!canSave.value) return;
+  localStorage.setItem('particleSimControls', JSON.stringify(controls.value));
+});
 
 onMounted(() => {
   if (!canvasP.value) return;
@@ -92,7 +134,7 @@ onMounted(() => {
       [1000, 4000, 0.9],
       [4000, 7000, 0.95],
       [7000, 8000, 1],
-    ]),
+    ]) * 1,
   ]);
   fillTexture(dtInfo, (index) => {
     return [0, index / PPS, 1, 0];
@@ -127,16 +169,22 @@ onMounted(() => {
     v.wrapT = THREE.RepeatWrapping;
   });
 
-  const updateComputeUniforms = (time: number, delta: number, cursor: THREE.Vector2) => {
+  const updateComputeUniforms = (time: number, delta: number, emitter: THREE.Vector2, emitDirection: THREE.Vector2) => {
     vars.forEach((v) => {
       const uni = v.material.uniforms;
       uni['time'] = { value: time };
       uni['delta'] = { value: delta };
-      uni['cursor'] = { value: cursor };
+      uni['uEmitter'] = { value: emitter };
+      uni['uEmitTowards'] = { value: emitDirection };
+
+      Object.keys(controls.value).forEach((key) => {
+        // @ts-ignore
+        uni[key] = { value: Number(controls.value[key]) };
+      });
     });
   };
 
-  updateComputeUniforms(0.0, 0.0, new THREE.Vector2(0, 0));
+  updateComputeUniforms(0.0, 0.0, new THREE.Vector2(0, 0), new THREE.Vector2(0, 0));
 
   gpuCompute.init();
 
@@ -166,7 +214,7 @@ onMounted(() => {
 
     depthWrite: false,
     uniforms: {
-      uCursor: {
+      uEmitter: {
         value: new THREE.Vector2(),
       },
       uScreenSize: {
@@ -175,7 +223,15 @@ onMounted(() => {
       uSize: { value: renderer.getPixelRatio() },
       uTime: { value: 0 },
       uLightPos: { value: new THREE.Vector2(0, 50) },
-
+      uLightPosX: { value: 0 },
+      uLightPosY: { value: 0 },
+      uLightPower: { value: 50 },
+      uShadowDirectional: {
+        value: 0.5,
+      },
+      uShadowRound: {
+        value: 0.01,
+      },
       uPosition: {
         value: gpuCompute.getCurrentRenderTarget(positionVariable).texture,
       },
@@ -229,14 +285,29 @@ onMounted(() => {
     lastTs = elapsedTime;
 
     raycaster.setFromCamera(pointer, camera);
-    const res = new THREE.Vector3();
-    raycaster.ray.intersectPlane(thePlane, res);
+    const cursorInSpace = new THREE.Vector3();
+    raycaster.ray.intersectPlane(thePlane, cursorInSpace);
 
-    updateComputeUniforms(elapsedTime, delta, new THREE.Vector2(res.x, res.y));
+    // Should update only when needed
+    raycaster.setFromCamera(new THREE.Vector2(0, 0.5), camera);
+    const emitFromInSpace = new THREE.Vector3();
+    raycaster.ray.intersectPlane(thePlane, emitFromInSpace);
+
+    updateComputeUniforms(
+      elapsedTime,
+      delta,
+      new THREE.Vector2(emitFromInSpace.x, emitFromInSpace.y),
+      new THREE.Vector2(cursorInSpace.x, cursorInSpace.y)
+    );
 
     gpuCompute.compute();
 
-    particleMaterial.uniforms.uCursor.value = pointer;
+    particleMaterial.uniforms.uLightPosX.value = controls.value.uLightPosX;
+    particleMaterial.uniforms.uLightPosY.value = controls.value.uLightPosY;
+    particleMaterial.uniforms.uLightPower.value = controls.value.uLightPower;
+    particleMaterial.uniforms.uShadowDirectional.value = controls.value.uShadowDirectional;
+    particleMaterial.uniforms.uShadowRound.value = controls.value.uShadowRound;
+
     particleMaterial.uniforms.uTime.value = elapsedTime;
     particleMaterial.uniforms.uPosition.value = gpuCompute.getCurrentRenderTarget(positionVariable).texture;
     particleMaterial.uniforms.uVelocity.value = gpuCompute.getCurrentRenderTarget(velocityVariable).texture;

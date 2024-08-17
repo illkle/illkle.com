@@ -1,6 +1,8 @@
 uniform float time;
 uniform float delta;
 
+uniform float uSizeMod;
+
 #define PARTICLE_TTL  5.0
 
 void main() {
@@ -20,9 +22,9 @@ void main() {
 
   if(time > timeDead) {
     // If patricle should be dead mark it for reset
-    gl_FragColor = vec4(time, time + PARTICLE_TTL, 1.0, random.w);
+    gl_FragColor = vec4(time, time + PARTICLE_TTL, 1.0, random.w * uSizeMod);
   } else {
-    gl_FragColor = vec4(timeBorn, timeDead, 0.0, random.w);
+    gl_FragColor = vec4(timeBorn, timeDead, 0.0, infoData.w);
   }
 
 }

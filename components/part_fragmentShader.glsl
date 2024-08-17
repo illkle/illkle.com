@@ -1,6 +1,12 @@
 precision mediump float;
 
 uniform vec2 uLightPos;
+uniform float uLightPosX;
+uniform float uLightPosY;
+uniform float uLightPower;
+uniform float uShadowRound;
+uniform float uShadowDirectional;
+
 varying float vLifePercent;
 varying vec3 vPosition;
 
@@ -11,25 +17,32 @@ varying vec3 vVelocity;
 #define PI 3.141592
 #define PI_2 6.283185
 
+float cubicOut(float t) {
+    float f = t - 1.0;
+    return f * f * f + 1.0;
+}
+
 void main() {
     float shadowStren = distance(gl_PointCoord, vec2(0.5));
     float strength2 = distance(gl_PointCoord, vec2(0.5));
     strength2 = 1.0 - step(0.2, strength2);
 
+    vec2 lightPos = vec2(uLightPosX, uLightPosY);
+
     vec4 backShadow = vec4(vec3(0.0), (1.0 - shadowStren - 0.5));
 
-    float distanceFromLight = distance(vPosition.xy, uLightPos);
-    float lightness = 1.0 - distanceFromLight / 400.0;
+    float distanceFromLight = distance(vPosition.xy, lightPos);
+    float lightness = 1.0 - cubicOut(distanceFromLight / uLightPower);
 
     vec3 particleColor = vec3(lightness);
-    vec4 mainParticle = vec4(particleColor, strength2) * vAliveness;
+    vec4 mainParticle = vec4(particleColor, strength2);
 
     // Making shadow mask to fake lighting
     // Angle in particle(current pixel relative to center of particle)
     float pixelInTexture = atan(gl_PointCoord.y - 0.5, gl_PointCoord.x - 0.5);
     float pixelInTextureMod = mod(0.0 - pixelInTexture, PI_2) / PI_2;
     // Angle on screen(current particle relative to center of screen)
-    float pointInGlobal = atan(vPosition.y - uLightPos.y, vPosition.x - uLightPos.x);
+    float pointInGlobal = atan(vPosition.y - lightPos.y, vPosition.x - lightPos.x);
     float pointInglobalMod = 1.0 - mod(0.0 - pointInGlobal, PI_2) / PI_2;
 
     float angleDistance = distance(pointInglobalMod, pixelInTextureMod);
@@ -40,8 +53,8 @@ void main() {
     float lightConeA = smoothstep(s1, s2, angleDistance);
     float lightConeB = smoothstep(1.0 - s1, 1.0 - s2, angleDistance);
 
-    vec4 maskedShadow = mix(vec4(0.0) + backShadow * 0.4, backShadow, lightConeA + lightConeB);
+    vec4 maskedShadow = mix(vec4(0.0) + backShadow * uShadowRound, backShadow * uShadowDirectional, lightConeA + lightConeB);
 
     //gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
-    gl_FragColor = maskedShadow * 1.25 + mainParticle * strength2;
+    gl_FragColor = maskedShadow + mainParticle * strength2;
 }

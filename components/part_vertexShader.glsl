@@ -54,8 +54,8 @@ void main() {
 
     // Animate size when particle spawns and when fades aout
     float sizeAnimateInFactor = exponentialOut(range(0.0, 0.25, 0.0, 1.0, percentOfLife));
-    float sizeBaseSize = myRandom.w;
-    float sizeAnimateOutFactor = (1.0 - percentOfLife);
+    float sizeBaseSize = myInfo.w;
+    float sizeAnimateOutFactor = exponentialOut(1.0 - percentOfLife);
     //float sizeVal = sizeBaseSize;
     float sizeVal = sizeBaseSize * sizeAnimateInFactor * sizeAnimateOutFactor;
 

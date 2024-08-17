@@ -1,6 +1,6 @@
 uniform float time;
 uniform float delta;
-uniform vec2 cursor;
+uniform vec2 uEmitter;
 
 void main() {
 
@@ -9,8 +9,8 @@ void main() {
     vec4 infoData = texture2D(textureInfo, uv);
 
     if(infoData.z > 0.9) {
-        position.x = cursor.x;
-        position.y = cursor.y;
+        position.x = uEmitter.x;
+        position.y = uEmitter.y;
         position.z = 0.0;
     }
 
