@@ -20,12 +20,22 @@
       </div>
 
       <div class="mt-7 md:mt-24 flex flex-col gap-6 font-light text-6xl">
-        <a href="https://github.com/ze-kel" class="hover:underline underline-offset-8"> GitHub </a>
-        <a href="https://behance.net/ze_kel" class="hover:underline underline-offset-8 text-right md:text-left">
+        <a target="_blank" href="https://github.com/ze-kel" class="hover:underline underline-offset-8"> GitHub </a>
+        <a
+          target="_blank"
+          href="https://behance.net/ze_kel"
+          class="hover:underline underline-offset-8 text-right md:text-left"
+        >
           Behance
         </a>
-        <a href="mailto:k.kelolov@gmail.com" class="hover:underline underline-offset-8"> Email </a>
-        <a href="https://t.me/ze_kel" class="hover:underline underline-offset-8 text-right md:text-left"> Telegram </a>
+        <a target="_blank" href="mailto:k.kelolov@gmail.com" class="hover:underline underline-offset-8"> Email </a>
+        <a
+          target="_blank"
+          href="https://t.me/ze_kel"
+          class="hover:underline underline-offset-8 text-right md:text-left"
+        >
+          Telegram
+        </a>
       </div>
 
       <div class="text-right text-sm font-light mt-20 group">
