@@ -25,46 +25,6 @@ export const useCanvasContext = (
   return context;
 };
 
-export const useScreenSize = () => {
-  const screenWidth = ref(0);
-  const screenHeight = ref(0);
-
-  const updateScreenSize = () => {
-    screenWidth.value = window.innerWidth;
-    screenHeight.value = window.innerHeight;
-  };
-
-  onMounted(() => {
-    addEventListener('resize', updateScreenSize);
-    updateScreenSize();
-  });
-
-  onUnmounted(() => {
-    removeEventListener('resize', updateScreenSize);
-  });
-
-  return { screenHeight, screenWidth };
-};
-
-export const useScroll = () => {
-  const scroll = ref(0);
-
-  const updateScroll = () => {
-    scroll.value = window.scrollY;
-  };
-
-  onMounted(() => {
-    addEventListener('scroll', updateScroll);
-    updateScroll();
-  });
-
-  onUnmounted(() => {
-    removeEventListener('scroll', updateScroll);
-  });
-
-  return { scroll };
-};
-
 export const useMousePos = () => {
   const mouseX = ref(0);
   const mouseY = ref(0);

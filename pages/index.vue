@@ -1,8 +1,8 @@
 <template>
-  <div class="p-4 sm:p-8">
+  <div class="p-4 sm:p-8 md:px-10 md:py-12 z-20 relative">
     <div class="flex flex-col justify-center">
       <div class="flex flex-col gap-2 sm:gap-8 md:flex-row justify-between">
-        <h1 class="font-black flex flex-col line leading-none tracking-wider w-fit text-3xl md:text-4xl">
+        <h1 class="font-black flex flex-col leading-[0.85] tracking-wider w-fit text-3xl">
           <span class="text-[1.40em]">ZE</span>
           <span class="text-[1em]">KEL</span>
         </h1>
@@ -19,7 +19,7 @@
         </div>
       </div>
 
-      <div class="mt-7 md:mt-24 flex flex-col gap-6 font-light text-6xl">
+      <div class="mt-7 md:mt-32 flex flex-col gap-6 text-6xl">
         <a target="_blank" href="https://github.com/ze-kel" class="hover:underline underline-offset-8"> GitHub </a>
         <a
           target="_blank"
@@ -43,6 +43,7 @@
       </div>
     </div>
   </div>
+  <Particles />
 </template>
 
 <script lang="ts" setup>

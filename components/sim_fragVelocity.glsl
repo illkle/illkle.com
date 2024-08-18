@@ -42,7 +42,7 @@ void main() {
         float d4 = fbm(random.yx * time * 1.0) * uBaseMult;
 
         vec2 baseDirection = uEmitTowards - uEmitter;
-        gl_FragColor = vec4((baseDirection * 0.005 + vec2(d3, d4)) * uBaseMult, 0.0, 100.0);
+        gl_FragColor = vec4((baseDirection * 0.001 + vec2(d3, d4)) * uBaseMult, 0.0, 100.0);
 
     } else {
         float d1 = fbm((selfPosition.xy * uVelPositionScale + random.yx * uVelRandomScale + time * uVelTimeScale) * uNoiseScale) * uVelMult;

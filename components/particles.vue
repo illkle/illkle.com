@@ -1,5 +1,23 @@
 <template>
-  <div class="absolute top-0 left-0 z-20 flex opacity flex-col">
+  <div ref="letterWrapper" class="absolute top-1/2 -translate-y-1/2 left-1/2 z-50">
+    <svg class="w-[400px]" viewBox="0 0 101 109" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path
+        ref="letterRef"
+        d="M0.782227 107V0.5H30.1822V42.65L62.7322 0.5H96.0322L58.6822 48.05L98.1322 107H65.5822L39.4822 67.1L30.1822 78.5V107H0.782227Z"
+        class="stroke-neutral-950"
+        stroke-width="0"
+      />
+    </svg>
+
+    <div
+      class="absolute top-0 left-0"
+      :style="`transform: translate(${onLetterPosition.x}px, ${onLetterPosition.y}px)`"
+    ></div>
+  </div>
+
+  <div
+    class="absolute opacity-0 hover:opacity-100 transition-opacity bg-neutral-950 p-2 rounded-tl-xl bottom-0 right-0 z-20 flex opacity flex-col"
+  >
     <div v-for="(el, i) in controls">
       <input v-model.number="controls[i]" type="number" class="w-20 bg-neutral-950 text-center" />
       {{ i }}
@@ -20,11 +38,10 @@ import * as THREE from 'three';
 import FragmentShader from './part_fragmentShader.glsl';
 import VertexShader from './part_vertexShader.glsl';
 import { GPUComputationRenderer } from 'three/examples/jsm/Addons.js';
+import anime from 'animejs/lib/anime.es.js';
+import { useElementBounding, useWindowSize } from '@vueuse/core';
 
-const { screenWidth, screenHeight } = useScreenSize();
-const { scroll } = useScroll();
-
-const FST = computed(() => range(0, screenHeight.value, 0, 100, scroll.value));
+const { width, height } = useWindowSize();
 
 const canvasP = ref<HTMLDivElement | null>(null);
 
@@ -33,22 +50,44 @@ let scene: THREE.Scene | null;
 let camera: THREE.PerspectiveCamera | null;
 
 const controls = ref({
-  uBaseMult: 0.1,
-  uBaseTimeScale: 1,
-  uVelPositionScale: 0.05,
-  uVelRandomScale: 1,
-  uVelTimeScale: 0.25,
+  uBaseMult: 0.5,
+  uBaseTimeScale: 10,
+  uVelPositionScale: 0.2,
+  uVelRandomScale: 0.1,
+  uVelTimeScale: 1,
   uVelMult: 2,
-  uNoiseScale: 1,
-  uSizeMod: 1,
+  uNoiseScale: 0.02,
+  uSizeMod: 3,
   uLightPosX: 0,
-  uLightPosY: 0,
-  uLightPower: 50,
-  uShadowRound: 0.01,
-  uShadowDirectional: 0.5,
+  uLightPosY: -100,
+  uLightPower: 2000,
+  uShadowRound: 0.1,
+  uShadowDirectional: 0.4,
 });
 
 const canSave = ref(false);
+
+const letterWrapper = ref<HTMLDivElement | null>(null);
+
+const letterWrapperDims = useElementBounding(letterWrapper);
+
+const letterRef = ref<HTMLDivElement | null>(null);
+
+const onLetterPosition = ref({ x: 0, y: 0, rotate: 0 });
+
+onMounted(() => {
+  const path = anime.path(letterRef.value);
+
+  anime({
+    targets: onLetterPosition.value,
+    x: path('x'),
+    y: path('y'),
+    rotate: path('angle'),
+    easing: 'linear',
+    duration: 8000,
+    loop: true,
+  });
+});
 
 onMounted(() => {
   const res = localStorage.getItem('particleSimControls');
@@ -131,8 +170,8 @@ onMounted(() => {
     customRandomness([
       [0, 100, 0.2],
       [500, 1000, 0.7],
-      [1000, 4000, 0.9],
-      [4000, 7000, 0.95],
+      [1000, 4000, 0.95],
+      [4000, 7000, 0.99],
       [7000, 8000, 1],
     ]) * 1,
   ]);
@@ -288,8 +327,20 @@ onMounted(() => {
     const cursorInSpace = new THREE.Vector3();
     raycaster.ray.intersectPlane(thePlane, cursorInSpace);
 
-    // Should update only when needed
-    raycaster.setFromCamera(new THREE.Vector2(0, 0.5), camera);
+    const radians = onLetterPosition.value.rotate * (Math.PI / 180);
+
+    const tX = Math.cos(radians);
+    const tY = Math.sin(radians);
+
+    console.log(Math.round(onLetterPosition.value.rotate), Math.round(tX), Math.round(tY));
+
+    const letterEmitX = range(0, width.value, -1, 1, letterWrapperDims.left.value + onLetterPosition.value.x);
+    const letterEmitY = range(0, height.value, 1, -1, letterWrapperDims.top.value + onLetterPosition.value.y);
+
+    // -1 -1 left bottom 1 1 top right
+    const emitCoords = new THREE.Vector2(letterEmitX, letterEmitY);
+
+    raycaster.setFromCamera(emitCoords, camera);
     const emitFromInSpace = new THREE.Vector3();
     raycaster.ray.intersectPlane(thePlane, emitFromInSpace);
 
@@ -297,7 +348,7 @@ onMounted(() => {
       elapsedTime,
       delta,
       new THREE.Vector2(emitFromInSpace.x, emitFromInSpace.y),
-      new THREE.Vector2(cursorInSpace.x, cursorInSpace.y)
+      new THREE.Vector2(emitFromInSpace.x + 300 * -tX, emitFromInSpace.y + 300 * tY)
     );
 
     gpuCompute.compute();
