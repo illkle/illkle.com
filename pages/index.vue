@@ -1,5 +1,5 @@
 <template>
-  <div class="p-4 sm:p-8 md:px-10 md:py-12 z-20 relative">
+  <div class="p-4 sm:p-8 md:px-10 md:py-12 z-20 relative min-h-screen flex flex-col justify-between">
     <div class="flex flex-col justify-center">
       <div class="flex flex-col gap-2 sm:gap-8 md:flex-row justify-between">
         <h1 class="font-black flex flex-col leading-[0.85] tracking-wider w-fit text-3xl">
@@ -37,10 +37,10 @@
           Telegram
         </a>
       </div>
+    </div>
 
-      <div class="text-right text-sm font-light mt-20 group">
-        <span class="opacity-0 transition-opacity group-hover:opacity-100">more stuff soon</span> +++
-      </div>
+    <div class="text-right text-sm font-light mt-20 group">
+      <span class="opacity-0 transition-opacity group-hover:opacity-100">more stuff soon</span> +++
     </div>
   </div>
   <Particles />

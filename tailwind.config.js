@@ -1,4 +1,6 @@
-module.exports = {
+import defaultTheme from 'tailwindcss/defaultTheme';
+
+export default {
   content: [
     './components/**/*.{js,vue,ts}',
     './layouts/**/*.vue',
@@ -7,6 +9,10 @@ module.exports = {
     './app.vue',
     './error.vue',
   ],
-  theme: {},
+  theme: {
+    fontFamily: {
+      sans: ['Geist', ...defaultTheme.fontFamily.sans],
+    },
+  },
   plugins: [],
 };

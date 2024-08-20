@@ -8,7 +8,7 @@
     </svg>
 
     <div
-      class="absolute top-0 left-0 w-10 h-10 bg-red-500 opacity-100"
+      class="absolute top-0 left-0 w-10 h-10 bg-red-500 opacity-0"
       :style="`transform: translate(${onLetterPosition.x}px, ${onLetterPosition.y}px)`"
     ></div>
   </div>
@@ -17,7 +17,7 @@
     class="absolute opacity-0 hover:opacity-100 transition-opacity bg-neutral-950 p-2 rounded-tl-xl bottom-0 right-0 z-20 flex opacity flex-col"
   >
     <div v-for="(el, i) in controls">
-      <input v-model.number="controls[i]" type="number" class="w-20 bg-neutral-950 text-center" />
+      <input v-model.number="controls[i]" type="number" class="w-20 bg-zinc-950 text-center" />
       {{ i }}
     </div>
   </div>
@@ -379,8 +379,10 @@ onMounted(() => {
 
     gpuCompute.compute();
 
-    particleMaterial.uniforms.uLightPosX.value = controls.value.uLightPosX;
-    particleMaterial.uniforms.uLightPosY.value = controls.value.uLightPosY;
+    particleMaterial.uniforms.uLightPosX.value = cursorInSpace.x;
+    particleMaterial.uniforms.uLightPosY.value = cursorInSpace.y;
+    //particleMaterial.uniforms.uLightPosX.value = controls.value.uLightPosX;
+    //particleMaterial.uniforms.uLightPosY.value = controls.value.uLightPosY;
     particleMaterial.uniforms.uLightPower.value = controls.value.uLightPower;
     particleMaterial.uniforms.uShadowDirectional.value = controls.value.uShadowDirectional;
     particleMaterial.uniforms.uShadowRound.value = controls.value.uShadowRound;

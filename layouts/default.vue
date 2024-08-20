@@ -9,7 +9,7 @@ useHead({
   title: 'Kirill Kleimenov',
   meta: [{ name: 'description', content: 'Kirill Kleimenov, frontend/fullstack developer' }],
   bodyAttrs: {
-    class: 'bg-neutral-950 text-neutral-50',
+    class: 'bg-2neutral-950 bg-gradient-to-br from-[#18181a] to-zinc-950 text-zinc-50',
   },
 });
 </script>
