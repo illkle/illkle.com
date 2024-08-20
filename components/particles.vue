@@ -1,5 +1,5 @@
 <template>
-  <div ref="letterWrapper" class="absolute top-1/2 -translate-y-1/2 left-1/2 z-50">
+  <div ref="letterWrapper" class="absolute top-1/2 -translate-y-1/2 left-1/2 max-md:-translate-x-1/2 z-50">
     <svg class="w-[400px]" viewBox="0 0 101 109" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path
         ref="letterRef"
@@ -57,25 +57,25 @@ const controls = ref({
   uVelTimeScale: 1,
   uVelMult: 2,
 
-  uNoiseScale: 0.02,
+  uNoiseScale: 0.1,
 
   // Secondary noise
   uVel2PositionScale: 0.2,
   uVel2RandomScale: 0.1,
-  uVel2TimeScale: 1,
+  uVel2TimeScale: 1.3,
   uVel2Mult: 2,
   // Secondary noise decreases from 1 to 0 in this size range
-  uVel2SizeLowerBound: 0,
-  uVel2SizeUpperBound: 3000,
+  uVel2SizeLowerBound: 3000,
+  uVel2SizeUpperBound: 4000,
 
-  uNoise2Scale: 0.02,
+  uNoise2Scale: 0.3,
 
   uSizeMod: 3,
   uLightPosX: 0,
-  uLightPosY: -100,
-  uLightPower: 2000,
-  uShadowRound: 0.1,
-  uShadowDirectional: 0.4,
+  uLightPosY: 200,
+  uLightPower: 500,
+  uShadowRound: 0.2,
+  uShadowDirectional: 0.5,
 });
 
 const canSave = ref(false);

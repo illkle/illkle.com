@@ -1,4 +1,4 @@
-precision mediump float;
+precision lowp float;
 
 uniform float uLightPosX;
 uniform float uLightPosY;
@@ -7,6 +7,9 @@ uniform float uShadowRound;
 uniform float uShadowDirectional;
 
 varying vec3 vPosition;
+
+varying float vLightness;
+varying float vPointInGlobalMod;
 
 #define PI 3.141592
 #define PI_2 6.283185
@@ -17,6 +20,7 @@ float cubicOut(float t) {
 }
 
 void main() {
+
     float rawStren = distance(gl_PointCoord, vec2(0.5));
     float strength = 1.0 - step(0.2, rawStren);
 
@@ -24,10 +28,7 @@ void main() {
 
     vec4 backShadow = vec4(vec3(0.0), (1.0 - rawStren - 0.5));
 
-    float distanceFromLight = distance(vPosition.xy, lightPos);
-    float lightness = 1.0 - cubicOut(distanceFromLight / uLightPower);
-
-    vec3 particleColor = vec3(lightness);
+    vec3 particleColor = vec3(vLightness);
     vec4 mainParticle = vec4(particleColor, strength);
 
     // Making shadow mask to fake lighting
@@ -35,10 +36,9 @@ void main() {
     float pixelInTexture = atan(gl_PointCoord.y - 0.5, gl_PointCoord.x - 0.5);
     float pixelInTextureMod = mod(0.0 - pixelInTexture, PI_2) / PI_2;
     // Angle on screen(current particle relative to center of screen)
-    float pointInGlobal = atan(vPosition.y - lightPos.y, vPosition.x - lightPos.x);
-    float pointInglobalMod = 1.0 - mod(0.0 - pointInGlobal, PI_2) / PI_2;
+    // Moved calculation to vertex shader to optimize
 
-    float angleDistance = distance(pointInglobalMod, pixelInTextureMod);
+    float angleDistance = distance(vPointInGlobalMod, pixelInTextureMod);
 
     float s1 = 0.3;
     float s2 = 0.01;
@@ -48,5 +48,6 @@ void main() {
 
     vec4 maskedShadow = mix(vec4(0.0) + backShadow * uShadowRound, backShadow * uShadowDirectional, lightConeA + lightConeB);
 
+    //gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
     gl_FragColor = maskedShadow + mainParticle * strength;
 }

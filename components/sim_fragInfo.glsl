@@ -1,3 +1,5 @@
+precision lowp float;
+
 uniform float time;
 uniform float delta;
 
