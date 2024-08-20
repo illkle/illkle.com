@@ -2,6 +2,9 @@
 import glsl from 'vite-plugin-glsl';
 
 export default defineNuxtConfig({
+  nitro: {
+    preset: 'static',
+  },
   compatibilityDate: '2024-04-03',
   devtools: { enabled: true },
   modules: ['@nuxtjs/tailwindcss', '@nuxt/fonts'],
