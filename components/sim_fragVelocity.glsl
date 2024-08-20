@@ -65,7 +65,7 @@ void main() {
         float n2X = fbm((selfPosition.xy * uVel2PositionScale + random.xy * uVel2RandomScale + time * uVel2TimeScale) * uNoise2Scale) * uVel2Mult * secondNoiseValue;
         float n2Y = fbm((selfPosition.yx * uVel2PositionScale + random.yx * uVel2RandomScale + time * uVel2TimeScale) * uNoise2Scale) * uVel2Mult * secondNoiseValue;
 
-        gl_FragColor = vec4(selfVelocity.x + (n1X + n2Y) * delta, selfVelocity.y + (n1Y + n2Y) * delta, 0.0, 100.0);
+        gl_FragColor = vec4(selfVelocity.x + (n1X + n2X) * delta, selfVelocity.y + (n1Y + n2Y) * delta, 0.0, 100.0);
     }
 
 }

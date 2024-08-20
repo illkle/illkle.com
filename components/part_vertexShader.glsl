@@ -10,12 +10,8 @@ attribute vec2 aTarget;
 
 #define PI 3.14159265359
 
-varying float vLifePercent;
-varying float vDistance;
 varying vec2 vUv;
 varying vec3 vPosition;
-varying vec3 vVelocity;
-varying float vAliveness;
 
 float lerp(float x, float y, float a) {
     return x * (1.0 - a) + y * a;
@@ -48,19 +44,16 @@ void main() {
     float timeWhenDead = myInfo.y;
 
     float progressTime = uTime - timeBorn;
-    float willLiveForTime = timeWhenDead - timeBorn;
-    float percentOfLife = progressTime / willLiveForTime;
-    float percentPi = percentOfLife * PI / 0.5;
+    float percentOfLife = progressTime / (timeWhenDead - timeBorn);
 
     // Animate size when particle spawns and when fades aout
     float sizeAnimateInFactor = exponentialOut(range(0.0, 0.25, 0.0, 1.0, percentOfLife));
     float sizeBaseSize = myInfo.w;
     float sizeAnimateOutFactor = exponentialOut(1.0 - percentOfLife);
-    //float sizeVal = sizeBaseSize;
     float sizeVal = sizeBaseSize * sizeAnimateInFactor * sizeAnimateOutFactor;
 
     vec4 ss = texture2D(uPosition, aTarget);
-    vec3 finalPosition = vec3(ss.x, ss.y, 0.0);
+    vec3 finalPosition = vec3(ss.xy, 0.0);
 
     // Generic transforms to account for 3d space and camera 
     vec4 modelPosition = modelMatrix * vec4(finalPosition, 1.0);
@@ -73,9 +66,5 @@ void main() {
 
     // Aliveness turnes off particle color in fragment shader.
     // We need to also make it zero when size is zero
-    vAliveness = step(0.0, progressTime) * step(0.00001, sizeVal);
-    vLifePercent = percentOfLife;
-    vDistance = distance(finalPosition.z, 0.0);
     vPosition = projectedPosition.xyz;
-    vVelocity = myVelocity.xyz;
 }

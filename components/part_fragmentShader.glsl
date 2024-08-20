@@ -1,18 +1,12 @@
 precision mediump float;
 
-uniform vec2 uLightPos;
 uniform float uLightPosX;
 uniform float uLightPosY;
 uniform float uLightPower;
 uniform float uShadowRound;
 uniform float uShadowDirectional;
 
-varying float vLifePercent;
 varying vec3 vPosition;
-
-varying float vAliveness;
-
-varying vec3 vVelocity;
 
 #define PI 3.141592
 #define PI_2 6.283185
@@ -23,19 +17,18 @@ float cubicOut(float t) {
 }
 
 void main() {
-    float shadowStren = distance(gl_PointCoord, vec2(0.5));
-    float strength2 = distance(gl_PointCoord, vec2(0.5));
-    strength2 = 1.0 - step(0.2, strength2);
+    float rawStren = distance(gl_PointCoord, vec2(0.5));
+    float strength = 1.0 - step(0.2, rawStren);
 
     vec2 lightPos = vec2(uLightPosX, uLightPosY);
 
-    vec4 backShadow = vec4(vec3(0.0), (1.0 - shadowStren - 0.5));
+    vec4 backShadow = vec4(vec3(0.0), (1.0 - rawStren - 0.5));
 
     float distanceFromLight = distance(vPosition.xy, lightPos);
     float lightness = 1.0 - cubicOut(distanceFromLight / uLightPower);
 
     vec3 particleColor = vec3(lightness);
-    vec4 mainParticle = vec4(particleColor, strength2);
+    vec4 mainParticle = vec4(particleColor, strength);
 
     // Making shadow mask to fake lighting
     // Angle in particle(current pixel relative to center of particle)
@@ -55,6 +48,5 @@ void main() {
 
     vec4 maskedShadow = mix(vec4(0.0) + backShadow * uShadowRound, backShadow * uShadowDirectional, lightConeA + lightConeB);
 
-    //gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
-    gl_FragColor = maskedShadow + mainParticle * strength2;
+    gl_FragColor = maskedShadow + mainParticle * strength;
 }

@@ -14,7 +14,6 @@ void main() {
 
   float timeBorn = infoData.x;
   float timeDead = infoData.y;
-  float isFreshSpawn = infoData.z;
 
   float progressTime = time - timeBorn;
   float willLiveForTime = timeDead - timeBorn;
