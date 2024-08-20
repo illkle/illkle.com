@@ -18,6 +18,10 @@ export const customRandomness = (points: number[][]) => {
   return 0;
 };
 
+export const customRandomness2 = (min: number, max: number, interpolation: (v: number) => number) => {
+  return interpolation(Math.random()) * (max - min) + min;
+};
+
 export const coolRandom = (min: number, max: number) => {
   const rMax = max - min;
 

@@ -19,7 +19,7 @@
         </div>
       </div>
 
-      <div class="mt-7 md:mt-32 flex flex-col gap-6 text-6xl">
+      <div class="mt-7 md:mt-32 flex flex-col gap-6 text-6xl md:w-fit">
         <a target="_blank" href="https://github.com/ze-kel" class="hover:underline underline-offset-8"> GitHub </a>
         <a
           target="_blank"

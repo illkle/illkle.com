@@ -4,13 +4,11 @@
       <path
         ref="letterRef"
         d="M0.782227 107V0.5H30.1822V42.65L62.7322 0.5H96.0322L58.6822 48.05L98.1322 107H65.5822L39.4822 67.1L30.1822 78.5V107H0.782227Z"
-        class="stroke-neutral-950"
-        stroke-width="0"
       />
     </svg>
 
     <div
-      class="absolute top-0 left-0"
+      class="absolute top-0 left-0 w-10 h-10 bg-red-500 opacity-100"
       :style="`transform: translate(${onLetterPosition.x}px, ${onLetterPosition.y}px)`"
     ></div>
   </div>
@@ -52,11 +50,26 @@ let camera: THREE.PerspectiveCamera | null;
 const controls = ref({
   uBaseMult: 0.5,
   uBaseTimeScale: 10,
+
+  // Primary Noise
   uVelPositionScale: 0.2,
   uVelRandomScale: 0.1,
   uVelTimeScale: 1,
   uVelMult: 2,
+
   uNoiseScale: 0.02,
+
+  // Secondary noise
+  uVel2PositionScale: 0.2,
+  uVel2RandomScale: 0.1,
+  uVel2TimeScale: 1,
+  uVel2Mult: 2,
+  // Secondary noise decreases from 1 to 0 in this size range
+  uVel2SizeLowerBound: 0,
+  uVel2SizeUpperBound: 3000,
+
+  uNoise2Scale: 0.02,
+
   uSizeMod: 3,
   uLightPosX: 0,
   uLightPosY: -100,
@@ -73,15 +86,38 @@ const letterWrapperDims = useElementBounding(letterWrapper);
 
 const letterRef = ref<HTMLDivElement | null>(null);
 
-const onLetterPosition = ref({ x: 0, y: 0, rotate: 0 });
+const onLetterPosition = ref({ x: 0, y: 0, rotate: 0, percentage: 0, pathLen: 0 });
+
+const letterSLen = 20;
+const letterDashArray = computed(() => {
+  const { pathLen } = onLetterPosition.value;
+
+  if (!pathLen) return '';
+
+  return `${letterSLen} ${pathLen - letterSLen}`;
+});
+
+const letterDashOffset = computed(() => {
+  const { pathLen, percentage } = onLetterPosition.value;
+
+  return -1 * pathLen * percentage;
+});
 
 onMounted(() => {
   const path = anime.path(letterRef.value);
+
+  const plen = path('').totalLength;
+
+  onLetterPosition.value.pathLen = plen;
+  console.log(plen);
+
+  //letterRef.value?.setAttribute('stroke-dasharray', `${plen / 2} ${plen / 2}`);
 
   anime({
     targets: onLetterPosition.value,
     x: path('x'),
     y: path('y'),
+    percentage: 1,
     rotate: path('angle'),
     easing: 'linear',
     duration: 8000,
@@ -122,7 +158,7 @@ onMounted(() => {
     1000
   );
 
-  renderer = new THREE.WebGLRenderer();
+  renderer = new THREE.WebGLRenderer({ alpha: true });
 
   renderer.setSize(document.documentElement.clientWidth, document.documentElement.clientHeight);
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
@@ -137,14 +173,9 @@ onMounted(() => {
 
   camera.position.z = 100;
 
-  //const controls = new OrbitControls(camera, document.documentElement);
-  //controls.update();
-
-  // Geo
-
   const particlesGeo = new THREE.BufferGeometry();
 
-  const count = 50000;
+  const count = 20000;
   const PPS = count / 10;
 
   const texSize = Math.ceil(Math.sqrt(count));
@@ -163,18 +194,15 @@ onMounted(() => {
   const dtVelocity = gpuCompute.createTexture();
   const dtInfo = gpuCompute.createTexture();
 
-  fillTexture(dtRandom, () => [
-    Math.random(),
-    Math.random(),
-    0,
-    customRandomness([
-      [0, 100, 0.2],
-      [500, 1000, 0.7],
-      [1000, 4000, 0.95],
-      [4000, 7000, 0.99],
-      [7000, 8000, 1],
-    ]) * 1,
-  ]);
+  function easeInCubic(x: number): number {
+    return x * x * x;
+  }
+
+  function easeInExpo(x: number): number {
+    return x === 0 ? 0 : Math.pow(2, 10 * x - 10);
+  }
+
+  fillTexture(dtRandom, () => [Math.random(), Math.random(), 0, customRandomness2(0, 5000, easeInExpo)]);
   fillTexture(dtInfo, (index) => {
     return [0, index / PPS, 1, 0];
   });
@@ -314,14 +342,14 @@ onMounted(() => {
   }
   addEventListener('mousemove', onPointerMove);
 
-  let lastTs = 0;
+  let elapsedTime = 0;
 
-  const animationLoop: FrameRequestCallback = (timestamp) => {
+  const animationLoop: FrameRequestCallback = () => {
+    console.log('frame');
     if (!scene || !camera) return;
 
-    const elapsedTime = clock.getElapsedTime();
-    const delta = elapsedTime - lastTs;
-    lastTs = elapsedTime;
+    const delta = clock.getDelta();
+    elapsedTime += delta;
 
     raycaster.setFromCamera(pointer, camera);
     const cursorInSpace = new THREE.Vector3();
@@ -331,8 +359,6 @@ onMounted(() => {
 
     const tX = Math.cos(radians);
     const tY = Math.sin(radians);
-
-    console.log(Math.round(onLetterPosition.value.rotate), Math.round(tX), Math.round(tY));
 
     const letterEmitX = range(0, width.value, -1, 1, letterWrapperDims.left.value + onLetterPosition.value.x);
     const letterEmitY = range(0, height.value, 1, -1, letterWrapperDims.top.value + onLetterPosition.value.y);
@@ -366,8 +392,9 @@ onMounted(() => {
     particleMaterial.uniforms.uRandom.value = gpuCompute.getCurrentRenderTarget(randomVariable).texture;
 
     renderer.render(scene, camera);
+    requestAnimationFrame(animationLoop);
   };
 
-  renderer.setAnimationLoop(animationLoop);
+  requestAnimationFrame(animationLoop);
 });
 </script>

@@ -54,50 +54,6 @@ export const range = (x1: number, y1: number, x2: number, y2: number, a: number)
 
 export type Point = { x: number; y: number };
 
-export const interpolatePoints = (a: Point, b: Point, progress: number): Point => {
-  const x = (a.x - b.x) * progress + b.x;
-  const y = (a.y - b.y) * progress + b.y;
-
-  return { x, y };
-};
-
-export const getDistanceBetweenPoints = (a: Point, b: Point) => {
-  return Math.abs(Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2)));
-};
-
-// Takes shape as 4 coordinates and returns random point on it's perimeter
-export const getRandomPointOnQuadrilateral = (p1: Point, p2: Point, p3: Point, p4: Point): Point => {
-  const lines: [Point, Point][] = [
-    [p1, p2],
-    [p2, p3],
-    [p3, p4],
-    [p4, p1],
-  ];
-
-  const linesLen = lines.map((v) => getDistanceBetweenPoints(v[0], v[1]));
-
-  const randomRes = getRandomNumber(
-    0,
-    linesLen.reduce((a, b) => a + b)
-  );
-
-  let lenStart = 0;
-  for (let li = 0; li < lines.length; li++) {
-    const end = lenStart + linesLen[li];
-    if (end < randomRes) {
-      lenStart += linesLen[li];
-      continue;
-    }
-    const progress = range(lenStart, end, 0, 1, randomRes);
-
-    return interpolatePoints(...lines[li], progress);
-  }
-
-  // This should never happen
-  console.error('getRandomPointOnQuadrilateral returning fallback value');
-  return p1;
-};
-
 export const fillTexture = (
   texture: THREE.DataTexture,
   generator: (numberOfPixel: number) => [number, number, number, number]
