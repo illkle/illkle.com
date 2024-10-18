@@ -23,8 +23,8 @@ uniform float uNoiseScale;
 
 uniform float uNoise2Scale;
 
-uniform vec2 uEmitter;
-uniform vec2 uEmitTowards;
+uniform vec3 uEmitter;
+uniform vec3 uEmitTowards;
 
 const float width = resolution.x;
 const float height = resolution.y;
@@ -33,6 +33,7 @@ const float PI = 3.141592653589793;
 const float PI_2 = PI * 2.0;
 
 #include "/node_modules/lygia/generative/fbm.glsl"
+#include "/node_modules/lygia/generative/gnoise.glsl"
 
 #define TIME_MULTIPLIER 0.3
 #define SCALE_MULTIPLER 1.0
@@ -53,21 +54,23 @@ void main() {
         // generate base velocity
         float d3 = fbm(random.xy * time * 1.0) * uBaseMult;
         float d4 = fbm(random.yx * time * 1.0) * uBaseMult;
+        float d5 = fbm(random.zy * time * 1.0) * uBaseMult;
 
-        vec2 baseDirection = uEmitTowards - uEmitter;
-        gl_FragColor = vec4((baseDirection * 0.001 + vec2(d3, d4)) * uBaseMult, 0.0, 100.0);
-
+        vec3 baseDirection = uEmitTowards - uEmitter;
+        gl_FragColor = vec4((baseDirection * 0.001 + vec3(d3, d4, d5)) * uBaseMult, 100.0);
     } else {
         // This is primary noise
         float n1X = fbm((selfPosition.xy * uVelPositionScale + random.yx * uVelRandomScale + time * uVelTimeScale) * uNoiseScale) * uVelMult;
         float n1Y = fbm((selfPosition.yx * uVelPositionScale + random.xy * uVelRandomScale + time * uVelTimeScale) * uNoiseScale) * uVelMult;
+        float n1Z = fbm((selfPosition.zy * uVelPositionScale + random.zy * uVelRandomScale + time * uVelTimeScale) * uNoiseScale) * uVelMult;
 
         // This is secondary noise for smaller particles
         float secondNoiseValue = 1.0 - smoothstep(uVel2SizeLowerBound, uVel2SizeUpperBound, mySize);
         float n2X = fbm((selfPosition.xy * uVel2PositionScale + random.xy * uVel2RandomScale + time * uVel2TimeScale) * uNoise2Scale) * uVel2Mult * secondNoiseValue;
         float n2Y = fbm((selfPosition.yx * uVel2PositionScale + random.yx * uVel2RandomScale + time * uVel2TimeScale) * uNoise2Scale) * uVel2Mult * secondNoiseValue;
+        float n2Z = fbm((selfPosition.zy * uVel2PositionScale + random.zy * uVel2RandomScale + time * uVel2TimeScale) * uNoise2Scale) * uVel2Mult * secondNoiseValue;
 
-        gl_FragColor = vec4(selfVelocity.x + (n1X + n2X) * delta, selfVelocity.y + (n1Y + n2Y) * delta, 0.0, 100.0);
+        gl_FragColor = vec4(selfVelocity.x + (n1X + n2X) * delta, selfVelocity.y + (n1Y + n2Y) * delta, selfVelocity.z + (n1Z + n2Z) * delta, 100.0);
     }
 
 }

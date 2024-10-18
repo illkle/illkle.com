@@ -2,7 +2,7 @@ precision lowp float;
 
 uniform float time;
 uniform float delta;
-uniform vec2 uEmitter;
+uniform vec3 uEmitter;
 
 void main() {
 
@@ -13,7 +13,7 @@ void main() {
     if(infoData.z > 0.9) {
         position.x = uEmitter.x;
         position.y = uEmitter.y;
-        position.z = 0.0;
+        position.z = uEmitter.z;
     }
 
     vec3 velocity = texture2D(textureVelocity, uv).xyz;

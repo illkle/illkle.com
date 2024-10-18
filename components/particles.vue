@@ -38,6 +38,7 @@ import VertexShader from './part_vertexShader.glsl';
 import { GPUComputationRenderer } from 'three/examples/jsm/Addons.js';
 import anime from 'animejs/lib/anime.es.js';
 import { useElementBounding, useWindowSize } from '@vueuse/core';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 const { width, height } = useWindowSize();
 
@@ -175,7 +176,7 @@ onMounted(() => {
 
   const particlesGeo = new THREE.BufferGeometry();
 
-  const count = 20000;
+  const count = 200;
   const PPS = count / 10;
 
   const texSize = Math.ceil(Math.sqrt(count));
@@ -202,7 +203,7 @@ onMounted(() => {
     return x === 0 ? 0 : Math.pow(2, 10 * x - 10);
   }
 
-  fillTexture(dtRandom, () => [Math.random(), Math.random(), 0, customRandomness2(0, 5000, easeInExpo)]);
+  fillTexture(dtRandom, () => [Math.random(), Math.random(), Math.random(), customRandomness2(0, 5000, easeInExpo)]);
   fillTexture(dtInfo, (index) => {
     return [0, index / PPS, 1, 0];
   });
@@ -236,7 +237,7 @@ onMounted(() => {
     v.wrapT = THREE.RepeatWrapping;
   });
 
-  const updateComputeUniforms = (time: number, delta: number, emitter: THREE.Vector2, emitDirection: THREE.Vector2) => {
+  const updateComputeUniforms = (time: number, delta: number, emitter: THREE.Vector3, emitDirection: THREE.Vector3) => {
     vars.forEach((v) => {
       const uni = v.material.uniforms;
       uni['time'] = { value: time };
@@ -251,7 +252,7 @@ onMounted(() => {
     });
   };
 
-  updateComputeUniforms(0.0, 0.0, new THREE.Vector2(0, 0), new THREE.Vector2(0, 0));
+  updateComputeUniforms(0.0, 0.0, new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 0));
 
   gpuCompute.init();
 
@@ -282,7 +283,7 @@ onMounted(() => {
     depthWrite: false,
     uniforms: {
       uEmitter: {
-        value: new THREE.Vector2(),
+        value: new THREE.Vector3(),
       },
       uScreenSize: {
         value: renderer.getSize(new THREE.Vector2()),
@@ -344,6 +345,9 @@ onMounted(() => {
 
   let elapsedTime = 0;
 
+  const ctrls = new OrbitControls(camera, renderer.domElement);
+  ctrls.update();
+
   const animationLoop: FrameRequestCallback = () => {
     console.log('frame');
     if (!scene || !camera) return;
@@ -370,19 +374,14 @@ onMounted(() => {
     const emitFromInSpace = new THREE.Vector3();
     raycaster.ray.intersectPlane(thePlane, emitFromInSpace);
 
-    updateComputeUniforms(
-      elapsedTime,
-      delta,
-      new THREE.Vector2(emitFromInSpace.x, emitFromInSpace.y),
-      new THREE.Vector2(emitFromInSpace.x + 300 * -tX, emitFromInSpace.y + 300 * tY)
-    );
+    updateComputeUniforms(elapsedTime, delta, new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 400, 200));
 
     gpuCompute.compute();
 
-    particleMaterial.uniforms.uLightPosX.value = cursorInSpace.x;
-    particleMaterial.uniforms.uLightPosY.value = cursorInSpace.y;
-    //particleMaterial.uniforms.uLightPosX.value = controls.value.uLightPosX;
-    //particleMaterial.uniforms.uLightPosY.value = controls.value.uLightPosY;
+    // particleMaterial.uniforms.uLightPosX.value = cursorInSpace.x;
+    // particleMaterial.uniforms.uLightPosY.value = cursorInSpace.y;
+    particleMaterial.uniforms.uLightPosX.value = controls.value.uLightPosX;
+    particleMaterial.uniforms.uLightPosY.value = controls.value.uLightPosY;
     particleMaterial.uniforms.uLightPower.value = controls.value.uLightPower;
     particleMaterial.uniforms.uShadowDirectional.value = controls.value.uShadowDirectional;
     particleMaterial.uniforms.uShadowRound.value = controls.value.uShadowRound;

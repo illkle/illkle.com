@@ -72,7 +72,7 @@ void main() {
     float sizeVal = sizeBaseSize * sizeAnimateInFactor * sizeAnimateOutFactor;
 
     vec4 ss = texture2D(uPosition, aTarget);
-    vec3 finalPosition = vec3(ss.xy, 0.0);
+    vec3 finalPosition = ss.xyz;
 
     // Generic transforms to account for 3d space and camera 
     vec4 modelPosition = modelMatrix * vec4(finalPosition, 1.0);
