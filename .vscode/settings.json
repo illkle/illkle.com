@@ -1,4 +1,7 @@
 {
-  "typescript.tsserver.experimental.useVsCodeWatcher": false,
-  "prettier.printWidth": 120
+  "prettier.documentSelectors": ["**/*.astro"],
+  "[astro]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "prettier.configPath": ".prettierrs.mjs"
 }

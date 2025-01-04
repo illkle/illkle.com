@@ -1,0 +1,69 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Logos from "../components/logos.astro";
+import Title from "../components/title.astro";
+---
+
+<Layout>
+  <div
+    class="mx-auto flex min-h-svh w-fit flex-col justify-center px-4 py-12 md:min-w-[500px]"
+  >
+    <Title />
+
+    <h2 class="mt-4 text-xl font-normal">
+      Frontend oriented fullstack developer
+    </h2>
+
+    <div class="group mt-2 flex gap-2">
+      <Logos />
+      <span
+        class="text-xs font-light text-stone-400 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+        >ordered by skill level</span
+      >
+    </div>
+
+    <p class="mt-8 max-sm:text-sm">
+      Follow me on <a
+        href="https://x.com/ill_kle"
+        target="_blank"
+        class="underline">X</a
+      > and <a
+        href="https://bsky.app/profile/illkle.bsky.social"
+        target="_blank"
+        class="underline">Bluesky</a
+      > for updates.<br />Star on github: <a
+        href="https://github.com/illkle/trackyourlife"
+        target="_blank"
+        class="underline">TrackYourLife</a
+      > and <a
+        href="https://github.com/illkle/bkkkkkz"
+        target="_blank"
+        class="underline">Opinions App</a
+      >.
+    </p>
+
+    <ul
+      class="mt-8 flex flex-col gap-2 text-sm font-light text-stone-400 md:flex-row md:gap-4 md:text-center"
+    >
+      <li>
+        <a target="_blank" href="mailto:k.kelolov@gmail.com" class="underline"
+          >k.kelolov@gmail.com</a
+        >
+      </li>
+      <li>
+        telegram: <a
+          target="_blank"
+          href="https://t.me/illkle"
+          class="underline">@illkle</a
+        >
+      </li>
+      <li>
+        github: <a
+          target="_blank"
+          href="https://github.com/illkle"
+          class="underline">illkle</a
+        >
+      </li>
+    </ul>
+  </div>
+</Layout>

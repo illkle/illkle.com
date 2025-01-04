@@ -1,0 +1,24 @@
+---
+import "@fontsource-variable/noto-sans/wdth.css";
+import notoSansWoff2 from "@fontsource-variable/noto-sans/files/noto-sans-latin-wdth-normal.woff2?url";
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preload" as="font" type="font/woff2" href={notoSansWoff2} />
+    <meta name="generator" content={Astro.generator} />
+    <title>Kirill Kleimenov</title>
+    <style>
+      body {
+        font-family: "Noto Sans Variable", sans-serif;
+      }
+    </style>
+  </head>
+  <body class="bg-stone-950 text-stone-50">
+    <slot />
+  </body>
+</html>
