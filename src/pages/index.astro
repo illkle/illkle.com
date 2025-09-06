@@ -1,28 +1,20 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import Logos from "../components/logos.astro";
 import Title from "../components/title.astro";
+import Projects from "@components/projects/index.astro";
 ---
 
-<Layout>
+<Layout title="Kirill Kleimenov">
   <div
-    class="mx-auto flex min-h-svh w-fit flex-col justify-center px-4 py-12 md:min-w-[500px]"
+    class="mx-auto flex w-fit flex-col justify-center px-4 pt-[25vh] pb-12 md:w-[500px]"
   >
     <Title />
 
     <div class="mt-12 font-mono">
       <h2 class="text-md">Frontend oriented fullstack developer</h2>
 
-      <div class="group mt-2 flex flex-wrap items-center gap-3">
-        <Logos />
-        <span
-          class="block translate-y-[1px] text-xs font-light text-stone-400 transition-opacity duration-200 group-hover:opacity-100 pointer-fine:opacity-20"
-          >lower opacity = less familiar</span
-        >
-      </div>
-
       <ul
-        class="mt-8 flex flex-col gap-2 text-sm font-light text-stone-400 md:flex-row md:gap-4 md:text-center"
+        class="mt-2 flex flex-col gap-2 text-sm font-light text-stone-400 md:flex-row md:gap-4 md:text-center"
       >
         <li>
           <a target="_blank" href="mailto:k.kelolov@gmail.com" class="underline"
@@ -45,5 +37,7 @@ import Title from "../components/title.astro";
         </li>
       </ul>
     </div>
+
+    <Projects />
   </div>
 </Layout>

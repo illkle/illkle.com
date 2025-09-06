@@ -1,0 +1,16 @@
+---
+import Logo from "@components/tech-logos/logo.astro";
+import type { TechName } from "@components/tech-logos/logos";
+
+const { logos, size } = Astro.props as { logos?: TechName[]; size: string };
+---
+
+{
+  logos && (
+    <div class="flex gap-1.5 opacity-70">
+      {logos?.map((t) => (
+        <Logo icon={t} size={size} />
+      ))}
+    </div>
+  )
+}

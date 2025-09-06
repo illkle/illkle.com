@@ -1,0 +1,58 @@
+---
+import CardAoc from "@components/projects/card-aoc.astro";
+import CardFeature from "@components/projects/card-feature.astro";
+import CardMini from "@components/projects/card-mini.astro";
+import Logo from "@components/tech-logos/logo.astro";
+import { getCollection, render } from "astro:content";
+import type { CollectionEntry } from "astro:content";
+
+const pageTitle = "My Astro Learning Blog";
+const projects = await getCollection("projects");
+
+const sortToCategories = (p: CollectionEntry<"projects">[]) => {
+  const cats = {
+    featured: [],
+    design: [],
+    aoc: [],
+    other: [],
+  } as Record<string, CollectionEntry<"projects">[]>;
+
+  p.forEach((project) => {
+    if (project.data.flags?.includes("featured")) {
+      cats.featured.push(project);
+    } else if (project.data.flags?.includes("design")) {
+      cats.design.push(project);
+    } else if (project.data.flags?.includes("aoc")) {
+      cats.aoc.push(project);
+    } else {
+      cats.other.push(project);
+    }
+  });
+
+  cats.other.sort((a, b) => (b.data.position ?? 0) - (a.data.position ?? 0));
+  cats.design.sort((a, b) => (b.data.position ?? 0) - (a.data.position ?? 0));
+  cats.aoc.sort((a, b) => {
+    return String(b.data.year).localeCompare(String(a.data.year));
+  });
+
+  return cats;
+};
+
+const cats = sortToCategories(projects);
+---
+
+<h2 class="mt-16 font-mono text-2xl">Code</h2>
+<ul
+  class="mt-2 grid w-[calc(100%+0.5rem)] -translate-x-2 gap-x-2 gap-y-4 md:grid-cols-2"
+>
+  {cats.featured.map((project) => <CardFeature project={project} />)}
+</ul>
+<ul class="mt-4 grid w-full grid-cols-2 gap-x-2 gap-y-4">
+  <CardAoc projects={cats.aoc} />
+  {cats.other.map((post) => <CardMini project={post} />)}
+</ul>
+
+<h2 class="mt-16 font-mono text-2xl">Design work archive</h2>
+<ul class="mt-2 grid w-full grid-cols-2 gap-x-2 gap-y-4">
+  {cats.design.map((post) => <CardMini project={post} />)}
+</ul>

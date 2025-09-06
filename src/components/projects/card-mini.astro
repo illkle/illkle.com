@@ -1,0 +1,40 @@
+---
+import Logo from "@components/tech-logos/logo.astro";
+import TechLogos from "@components/tech-logos/tech-logos.astro";
+import type { CollectionEntry } from "astro:content";
+const { project } = Astro.props as { project: CollectionEntry<"projects"> };
+---
+
+<li data-position={project.data.position}>
+  {
+    project.data.link ? (
+      <a href={project.data.link} target="_blank">
+        <h3 class="text-sm underline">{project.data.title}</h3>
+      </a>
+    ) : (
+      <h3 class="block text-sm">{project.data.title}</h3>
+    )
+  }
+
+  {
+    project.data.links && (
+      <div class="flex items-center gap-2 text-stone-400">
+        {project.data.links?.map((link) => (
+          <a href={link.link} target="_blank" class="text-xs underline">
+            {link.label}
+          </a>
+        ))}
+      </div>
+    )
+  }
+
+  <div class="mt-1 flex items-center gap-2">
+    {
+      project.data.year && (
+        <div class="text-xs text-stone-600">{project.data.year}</div>
+      )
+    }
+
+    <TechLogos logos={project.data.tech} />
+  </div>
+</li>
