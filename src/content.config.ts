@@ -1,5 +1,4 @@
 import { defineCollection, z } from "astro:content";
-
 import { glob } from "astro/loaders";
 import { techNames } from "@components/tech-logos/logos";
 
