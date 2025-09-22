@@ -12,5 +12,6 @@ tech:
   - photoshop
 flags:
   - design
+  - force-nowrap
 position: 3
 ---

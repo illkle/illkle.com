@@ -20,6 +20,7 @@ const projects = defineCollection({
     tech: z.array(techNames).optional(),
     flags: z.array(z.string()).optional(),
     position: z.number().optional(),
+    status: z.string().optional(),
     links: z
       .array(z.object({ link: z.string(), label: z.string() }))
       .optional(),
