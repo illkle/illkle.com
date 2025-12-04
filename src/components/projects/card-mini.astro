@@ -1,47 +1,82 @@
 ---
-import Logo from "@components/tech-logos/logo.astro";
 import TechLogos from "@components/tech-logos/tech-logos.astro";
 import type { CollectionEntry } from "astro:content";
+
 const { project } = Astro.props as { project: CollectionEntry<"projects"> };
 ---
 
-<li data-position={project.data.position}>
-  <div
-    class="flex flex-wrap gap-x-1"
-    class:list={[
-      project.data.flags?.includes("force-nowrap") ? "flex-col" : "",
-    ]}
-  >
+<li
+  data-position={project.data.position}
+  class="group relative h-80 overflow-hidden rounded-md border border-neutral-800 bg-neutral-950 transition-colors duration-300 hover:border-neutral-700/90"
+>
+  <div class="flex h-full w-full">
     {
-      project.data.link ? (
-        <a href={project.data.link} target="_blank">
-          <h3 class="text-sm underline">{project.data.title}</h3>
-        </a>
-      ) : (
-        <h3 class="block text-sm">{project.data.title}</h3>
-      )
-    }
-
-    {
-      project.data.links && (
-        <div class="flex items-center gap-2 text-stone-400">
-          {project.data.links?.map((link) => (
-            <a href={link.link} target="_blank" class="text-xs underline">
-              {link.label}
-            </a>
-          ))}
+      project.data.views?.map((view, index) => (
+        <div class="h-full">
+          <img
+            src={view.image?.src}
+            alt={view.label}
+            class="h-full w-full object-cover object-center opacity-60 grayscale transition-all duration-500 group-hover:opacity-100 group-hover:filter-none"
+          />
         </div>
-      )
+      ))
     }
   </div>
 
-  <div class="mt-1 flex items-center gap-2">
+  <div class="z-10 mx-auto flex w-full gap-2 opacity-20">
     {
-      project.data.year && (
-        <div class="text-xs text-stone-600">{project.data.year}</div>
-      )
+      project.data.views?.map((view, index) => (
+        <a
+          href={view.link}
+          target="_blank"
+          class="h-full w-full text-center text-sm underline"
+        >
+          {view.label}
+        </a>
+      ))
     }
+  </div>
 
-    <TechLogos logos={project.data.tech} />
+  <div
+    class="absolute bottom-0 left-0 z-3 w-full bg-linear-180 from-transparent to-neutral-950 to-100% p-3 pt-48"
+  >
+    <div
+      class="flex flex-wrap gap-x-1"
+      class:list={[
+        project.data.flags?.includes("force-nowrap") ? "flex-col" : "",
+      ]}
+    >
+      {
+        project.data.link ? (
+          <a href={project.data.link} target="_blank">
+            <h3 class="text-xl underline">{project.data.title}</h3>
+          </a>
+        ) : (
+          <h3 class="block text-sm">{project.data.title}</h3>
+        )
+      }
+
+      {
+        project.data.links && (
+          <div class="flex items-center gap-2 text-stone-400">
+            {project.data.links?.map((link) => (
+              <a href={link.link} target="_blank" class="text-xs underline">
+                {link.label}
+              </a>
+            ))}
+          </div>
+        )
+      }
+    </div>
+
+    <div class="mt-1 flex items-center gap-2">
+      {
+        project.data.year && (
+          <div class="text-xs text-stone-600">{project.data.year}</div>
+        )
+      }
+
+      <TechLogos logos={project.data.tech} />
+    </div>
   </div>
 </li>

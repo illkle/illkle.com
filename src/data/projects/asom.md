@@ -12,7 +12,6 @@ tech:
   - typescript
 flags:
   - featured
-status: developing
 ---
 
 Local markdown based app to save movie\book\game reviews.

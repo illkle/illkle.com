@@ -11,7 +11,6 @@ tech:
   - zero
 flags:
   - featured
-status: on hold
 ---
 
 Personal stats tracker with flexible data types

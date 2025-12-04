@@ -2,11 +2,9 @@
 import CardAoc from "@components/projects/card-aoc.astro";
 import CardFeature from "@components/projects/card-feature.astro";
 import CardMini from "@components/projects/card-mini.astro";
-import Logo from "@components/tech-logos/logo.astro";
 import { getCollection, render } from "astro:content";
 import type { CollectionEntry } from "astro:content";
 
-const pageTitle = "My Astro Learning Blog";
 const projects = await getCollection("projects");
 
 const sortToCategories = (p: CollectionEntry<"projects">[]) => {

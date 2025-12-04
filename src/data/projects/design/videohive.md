@@ -5,7 +5,7 @@ links:
     label: "Videohive"
   - link: https://www.behance.net/gallery/78066573/Stock-Trap-Promo
     label: "Fav #1"
-  - link: https://www.behance.net/gallery/77454977/Daily-Renders-Best-of-Year-15
+  - link: https://www.behance.net/gallery/80476601/Stock-Fast-Graphic
     label: "Fav #2"
 year: "2018-19"
 tech:
