@@ -13,7 +13,7 @@ links:
     link: "https://github.com/illkle/aoc23"
     icon: typescript
   - label: "22"
-    link: "https://github.com/illkle/aoc23"
+    link: "https://github.com/illkle/aoc22"
     icon: typescript
   - label: "21"
     link: "https://github.com/illkle/aoc21"
