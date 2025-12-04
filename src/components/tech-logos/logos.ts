@@ -3,6 +3,7 @@ import react from "@assets/logos/react.svg?url";
 import vue from "@assets/logos/vue.svg?url";
 import svelte from "@assets/logos/svelte.svg?url";
 import golang from "@assets/logos/golang.svg?url";
+import golangShort from "@assets/logos/golangShort.svg?url";
 import rust from "@assets/logos/rust.svg?url";
 import expo from "@assets/logos/expo.svg?url";
 import threejs from "@assets/logos/threejs.svg?url";
@@ -23,6 +24,7 @@ export const techNames = z.enum([
   "vue",
   "svelte",
   "go",
+  "go-s",
   "rust",
   "expo",
   "three.js",
@@ -64,6 +66,11 @@ export const icons: Record<
   },
   go: {
     image: golang,
+    alt: "Golang",
+    link: "https://golang.org/",
+  },
+  "go-s": {
+    image: golangShort,
     alt: "Golang",
     link: "https://golang.org/",
   },
