@@ -1,11 +1,39 @@
 ---
 import { getIcon, type TechName } from "./logos";
-const { icon, size } = Astro.props as { icon: TechName; size: string };
+const {
+  icon,
+  size,
+  noLink,
+  class: cl,
+} = Astro.props as {
+  icon: TechName;
+  size: string;
+  noLink: boolean;
+  class: string;
+};
 const i = getIcon(icon);
 
 const s = size ?? "12";
 ---
 
-<a href={i.link} target="_blank">
-  <img alt={i.alt} src={i.image} style={`height: ${s}px`} loading="lazy" />
-</a>
+{
+  noLink ? (
+    <img
+      alt={i.alt}
+      src={i.image}
+      style={`height: ${s}px`}
+      loading="lazy"
+      class={cl}
+    />
+  ) : (
+    <a href={i.link} target="_blank">
+      <img
+        alt={i.alt}
+        src={i.image}
+        style={`height: ${s}px`}
+        loading="lazy"
+        class={cl}
+      />
+    </a>
+  )
+}

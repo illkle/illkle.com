@@ -16,12 +16,14 @@ const projects = defineCollection({
   schema: ({ image }) =>
     z.object({
       title: z.string().optional(),
+      size: z.number().optional(),
       views: z
         .array(
           z.object({
             label: z.string().optional(),
-            link: z.string(),
+            link: z.string().optional(),
             image: image().optional(),
+            labelInvert: z.boolean().optional(),
           }),
         )
         .optional(),
@@ -31,7 +33,13 @@ const projects = defineCollection({
       flags: z.array(z.string()).optional(),
       position: z.number().optional(),
       links: z
-        .array(z.object({ link: z.string(), label: z.string() }))
+        .array(
+          z.object({
+            link: z.string(),
+            label: z.string(),
+            icon: techNames.optional(),
+          }),
+        )
         .optional(),
     }),
 });

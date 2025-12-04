@@ -1,4 +1,5 @@
 ---
+import Logo from "@components/tech-logos/logo.astro";
 import TechLogos from "@components/tech-logos/tech-logos.astro";
 import type { CollectionEntry } from "astro:content";
 
@@ -7,76 +8,84 @@ const { project } = Astro.props as { project: CollectionEntry<"projects"> };
 
 <li
   data-position={project.data.position}
-  class="group relative h-80 overflow-hidden rounded-md border border-neutral-800 bg-neutral-950 transition-colors duration-300 hover:border-neutral-700/90"
+  class="group relative h-80 overflow-hidden rounded-md border border-neutral-800 bg-neutral-950 transition-colors duration-300 hover:border-neutral-700/90 xl:rounded-lg"
+  class:list={[project.data.size == 2 ? "col-span-2" : ""]}
 >
   <div class="flex h-full w-full">
     {
       project.data.views?.map((view, index) => (
-        <div class="h-full">
+        <a
+          data-image-wrap
+          href={view.link}
+          target="_blank"
+          class="group/image relative h-full w-full"
+        >
+          <span
+            class="pointer-events-none absolute top-2 left-2 z-10 font-mono text-sm opacity-0 transition-opacity duration-300 group-hover/image:opacity-100"
+            class:list={[
+              view.labelInvert ? "text-neutral-900" : "text-neutral-200",
+            ]}
+          >
+            {view.label}
+          </span>
           <img
             src={view.image?.src}
             alt={view.label}
-            class="h-full w-full object-cover object-center opacity-60 grayscale transition-all duration-500 group-hover:opacity-100 group-hover:filter-none"
+            class="h-full w-full object-cover object-top opacity-60 grayscale transition-all duration-500 hover:opacity-100 hover:filter-none"
           />
-        </div>
-      ))
-    }
-  </div>
-
-  <div class="z-10 mx-auto flex w-full gap-2 opacity-20">
-    {
-      project.data.views?.map((view, index) => (
-        <a
-          href={view.link}
-          target="_blank"
-          class="h-full w-full text-center text-sm underline"
-        >
-          {view.label}
         </a>
       ))
     }
   </div>
 
   <div
-    class="absolute bottom-0 left-0 z-3 w-full bg-linear-180 from-transparent to-neutral-950 to-100% p-3 pt-48"
+    class="pointer-events-none absolute bottom-0 left-0 z-3 w-full bg-linear-180 from-transparent via-neutral-950/96 via-80% to-neutral-950 p-3 pt-48"
   >
-    <div
-      class="flex flex-wrap gap-x-1"
-      class:list={[
-        project.data.flags?.includes("force-nowrap") ? "flex-col" : "",
-      ]}
-    >
+  </div>
+
+  <div class="absolute bottom-0 left-0 z-3 w-full to-100% p-3">
+    <h3 class="block text-xl">{project.data.title}</h3>
+
+    <p class="mb-1 text-xs text-stone-500">
+      {project.body}
+    </p>
+
+    <div class="flex flex-wrap justify-between gap-2">
       {
-        project.data.link ? (
-          <a href={project.data.link} target="_blank">
-            <h3 class="text-xl underline">{project.data.title}</h3>
-          </a>
-        ) : (
-          <h3 class="block text-sm">{project.data.title}</h3>
+        (project.data.year || project.data.tech?.length) && (
+          <div class="mt-1 flex items-center gap-2">
+            {project.data.year && (
+              <div class="text-xs text-stone-600">{project.data.year}</div>
+            )}
+
+            <TechLogos logos={project.data.tech} />
+          </div>
         )
       }
 
       {
         project.data.links && (
-          <div class="flex items-center gap-2 text-stone-400">
+          <div class="flex flex-wrap items-center gap-2 text-stone-400">
             {project.data.links?.map((link) => (
-              <a href={link.link} target="_blank" class="text-xs underline">
-                {link.label}
+              <a
+                href={link.link}
+                target="_blank"
+                class="flex items-end gap-0.5 gap-1 text-xs underline"
+              >
+                <span> {link.label}</span>
+                {link.icon && (
+                  <Logo
+                    noLink={true}
+                    icon={link.icon}
+                    size="12"
+                    class="opacity-70"
+                  />
+                )}
               </a>
             ))}
           </div>
         )
       }
-    </div>
-
-    <div class="mt-1 flex items-center gap-2">
-      {
-        project.data.year && (
-          <div class="text-xs text-stone-600">{project.data.year}</div>
-        )
-      }
-
-      <TechLogos logos={project.data.tech} />
     </div>
   </div>
 </li>

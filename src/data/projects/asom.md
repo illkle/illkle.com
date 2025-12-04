@@ -1,10 +1,9 @@
 ---
 title: "asom"
-links:
-  - label: releases
-    link: https://github.com/illkle/asom/releases
-  - label: github
-    link: "https://github.com/illkle/asom"
+views:
+  - link: https://github.com/illkle/asom/releases
+    image: ./images/asom.png
+size: 2
 tech:
   - tauri
   - vue

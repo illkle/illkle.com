@@ -1,12 +1,12 @@
 ---
 title: "mvstr"
-link: "https://github.com/illkle/mvstr"
 year: 2024
+views:
+  - link: "https://github.com/illkle/mvstr"
+    image: ./images/mvstr.jpg
 tech:
   - typescript
   - react
   - expo
 position: 3
 ---
-
-Helped a friend make a working prototype of a mobile app

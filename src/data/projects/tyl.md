@@ -1,10 +1,12 @@
 ---
-title: "TYL"
+title: "TrackYourLife"
 links:
-  - label: website
-    link: https://tyl.illkle.com
   - label: github
     link: https://github.com/illkle/trackyourlife
+size: 2
+views:
+  - link: https://tyl.illkle.com
+    image: ./images/tyl.png
 tech:
   - react
   - typescript
