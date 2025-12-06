@@ -30,6 +30,7 @@ const { project } = Astro.props as { project: CollectionEntry<"projects"> };
           </span>
           <img
             src={view.image?.src}
+            draggable="false"
             alt={view.label}
             class="h-full w-full object-cover object-top opacity-60 grayscale transition-all duration-500 hover:opacity-100 hover:filter-none"
           />
