@@ -6,5 +6,5 @@ views:
 year: 2024
 tech:
   - svelte
-position: 4
+position: 12
 ---

@@ -18,5 +18,5 @@ links:
   - label: "21"
     link: "https://github.com/illkle/aoc21"
     icon: javascript
-position: 6
+position: 30
 ---

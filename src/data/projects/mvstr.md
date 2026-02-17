@@ -8,5 +8,5 @@ tech:
   - typescript
   - react
   - expo
-position: 3
+position: 24
 ---

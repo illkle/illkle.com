@@ -13,6 +13,7 @@ tech:
   - zero
 flags:
   - featured
+position: 101
 ---
 
 Personal stats tracker with flexible data types

@@ -5,52 +5,15 @@ import type { CollectionEntry } from "astro:content";
 
 const projects = await getCollection("projects");
 
-const sortToCategories = (p: CollectionEntry<"projects">[]) => {
-  const cats = {
-    featured: [],
-    design: [],
-    aoc: [],
-    code: [],
-  } as Record<string, CollectionEntry<"projects">[]>;
-
-  p.forEach((project) => {
-    if (project.data.flags?.includes("featured")) {
-      cats.featured.push(project);
-    } else if (project.data.flags?.includes("design")) {
-      cats.design.push(project);
-    } else {
-      cats.code.push(project);
-    }
-  });
-
-  cats.code.sort((a, b) => (b.data.position ?? 0) - (a.data.position ?? 0));
-  cats.design.sort((a, b) => (b.data.position ?? 0) - (a.data.position ?? 0));
-
-  return cats;
-};
-
-const cats = sortToCategories(projects);
+const sorted = projects.sort(
+  (a, b) => (b.data.position ?? 0) - (a.data.position ?? 0),
+);
 ---
 
 <div class="grid grid-cols-1 gap-x-8 gap-y-4 lg:grid-cols-2">
   <div class="lg:col-span-2">
-    <h2 class="mt-16 font-mono text-2xl">Current projects</h2>
-    <ul class="mt-4 grid w-full grid-cols-2 gap-x-2 gap-y-4 md:grid-cols-4">
-      {cats.featured.map((project) => <CardMini project={project} />)}
-    </ul>
-  </div>
-
-  <div>
-    <h2 class="mt-16 font-mono text-2xl">Code archive</h2>
-    <ul class="mt-4 grid w-full grid-cols-1 gap-x-2 gap-y-4 sm:grid-cols-2">
-      {cats.code.map((post) => <CardMini project={post} />)}
-    </ul>
-  </div>
-
-  <div>
-    <h2 class="mt-16 font-mono text-2xl">Design archive</h2>
-    <ul class="mt-4 grid w-full grid-cols-1 gap-x-2 gap-y-4 sm:grid-cols-2">
-      {cats.design.map((post) => <CardMini project={post} />)}
+    <ul class="mt-8 grid w-full grid-cols-2 gap-x-2 gap-y-4 md:grid-cols-4">
+      {sorted.map((project) => <CardMini project={project} />)}
     </ul>
   </div>
 </div>

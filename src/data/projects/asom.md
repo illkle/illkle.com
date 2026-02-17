@@ -4,6 +4,7 @@ views:
   - link: https://github.com/illkle/asom/releases
     image: ./images/asom.png
 size: 2
+position: 100
 tech:
   - tauri
   - vue
