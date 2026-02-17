@@ -8,7 +8,7 @@ const { project } = Astro.props as { project: CollectionEntry<"projects"> };
 
 <li
   data-position={project.data.position}
-  class="group relative h-80 overflow-hidden rounded-md border border-neutral-800 bg-neutral-950 transition-colors duration-300 hover:border-neutral-700/90 xl:rounded-lg"
+  class="group relative h-80 overflow-hidden rounded-md border border-stone-800 bg-stone-950 transition-colors duration-300 hover:border-stone-700/90 xl:rounded-lg"
   class:list={[project.data.size == 2 ? "col-span-2" : ""]}
 >
   <div class="flex h-full w-full">
@@ -23,7 +23,7 @@ const { project } = Astro.props as { project: CollectionEntry<"projects"> };
           <span
             class="pointer-events-none absolute top-2 left-2 z-10 font-mono text-sm opacity-0 transition-opacity duration-300 group-hover/image:opacity-100"
             class:list={[
-              view.labelInvert ? "text-neutral-900" : "text-neutral-200",
+              view.labelInvert ? "text-stone-900" : "text-stone-200",
             ]}
           >
             {view.label}
@@ -40,7 +40,7 @@ const { project } = Astro.props as { project: CollectionEntry<"projects"> };
   </div>
 
   <div
-    class="pointer-events-none absolute bottom-0 left-0 z-3 w-full bg-linear-180 from-transparent via-neutral-950/96 via-80% to-neutral-950 p-3 pt-48"
+    class="pointer-events-none absolute bottom-0 left-0 z-3 w-full bg-linear-180 from-transparent via-stone-950/96 via-80% to-stone-950 p-3 pt-48"
   >
   </div>
 
