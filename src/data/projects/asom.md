@@ -12,6 +12,7 @@ tech:
   - typescript
 flags:
   - featured
+year: 2024-25
 ---
 
 Local markdown based app to save movie\book\game reviews.

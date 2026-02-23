@@ -13,6 +13,7 @@ import cinema4d from "@assets/logos/cinema4d.svg?url";
 import octane from "@assets/logos/octane.svg?url";
 import photoshop from "@assets/logos/photoshop.svg?url";
 import zero from "@assets/logos/zero.svg?url";
+import powersync from "@assets/logos/powersync.svg?url";
 import tauri from "@assets/logos/tauri.svg?url";
 import javascript from "@assets/logos/javascript.svg?url";
 
@@ -36,6 +37,7 @@ export const techNames = z.enum([
   "tauri",
   "zero",
   "javascript",
+  "powersync",
 ]);
 
 export type TechName = z.infer<typeof techNames>;
@@ -128,6 +130,11 @@ export const icons: Record<
     image: javascript,
     alt: "Javascript",
     link: "https://developer.mozilla.org/ru/docs/Web/JavaScript",
+  },
+  powersync: {
+    image: powersync,
+    alt: "Powersync",
+    link: "https://www.powersync.com/",
   },
 };
 

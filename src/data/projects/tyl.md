@@ -10,7 +10,8 @@ views:
 tech:
   - react
   - typescript
-  - zero
+  - powersync
+  - expo
 flags:
   - featured
 position: 101

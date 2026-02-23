@@ -8,7 +8,7 @@ views:
     label: Year 2
     image: ./../images/daily_y2.jpg
     labelInvert: true
-size: 2
+size: 1
 year: 2018-20
 tech:
   - cinema 4d
