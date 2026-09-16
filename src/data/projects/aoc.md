@@ -2,6 +2,7 @@
 title: "Advent of Code"
 views:
   - image: ./images/aoc.jpg
+size: 2
 links:
   - label: "25"
     link: "https://github.com/illkle/aoc25"
@@ -18,5 +19,5 @@ links:
   - label: "21"
     link: "https://github.com/illkle/aoc21"
     icon: javascript
-position: 30
+position: 45
 ---

@@ -16,8 +16,8 @@ import zero from "@assets/logos/zero.svg?url";
 import powersync from "@assets/logos/powersync.svg?url";
 import tauri from "@assets/logos/tauri.svg?url";
 import javascript from "@assets/logos/javascript.svg?url";
-
-import { z } from "astro:content";
+import electron from "@assets/logos/electron.svg?url";
+import { z } from "astro/zod";
 
 export const techNames = z.enum([
   "typescript",
@@ -38,6 +38,7 @@ export const techNames = z.enum([
   "zero",
   "javascript",
   "powersync",
+  "electron",
 ]);
 
 export type TechName = z.infer<typeof techNames>;
@@ -135,6 +136,11 @@ export const icons: Record<
     image: powersync,
     alt: "Powersync",
     link: "https://www.powersync.com/",
+  },
+  electron: {
+    image: electron,
+    alt: "Electron",
+    link: "https://electronjs.org/",
   },
 };
 

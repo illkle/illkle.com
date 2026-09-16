@@ -2,6 +2,7 @@
 import Logo from "@components/tech-logos/logo.astro";
 import TechLogos from "@components/tech-logos/tech-logos.astro";
 import type { CollectionEntry } from "astro:content";
+import { Image } from "astro:assets";
 
 const { project } = Astro.props as { project: CollectionEntry<"projects"> };
 ---
@@ -28,12 +29,14 @@ const { project } = Astro.props as { project: CollectionEntry<"projects"> };
           >
             {view.label}
           </span>
-          <img
-            src={view.image?.src}
-            draggable="false"
-            alt={view.label}
-            class="h-full w-full object-cover object-top opacity-60 grayscale transition-all duration-500 hover:opacity-100 hover:filter-none"
-          />
+          {view.image && (
+            <Image
+              src={view.image}
+              alt={view.label ?? ""}
+              draggable="false"
+              class="h-full w-full object-cover object-top opacity-60 grayscale transition-all duration-500 hover:opacity-100 hover:filter-none"
+            />
+          )}
         </a>
       ))
     }

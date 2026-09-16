@@ -15,6 +15,7 @@ tech:
 flags:
   - featured
 position: 101
+year: 2023-25
 ---
 
 Personal stats tracker with flexible data types
